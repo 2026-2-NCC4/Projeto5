@@ -8,13 +8,13 @@
 
 ## Integrantes: <a href="https://github.com/rodriguesbrun">Bruno Rodrigues Da Costa</a>, <a href="https://www.linkedin.com/in/guilherme-monteiro14/">Guilherme Monteiro Da Silva</a>, <a href="https://github.com/DebatingAlpaca">João Pedro Da Silva</a>, <a href="https://github.com/StefanyO8">Stefany Samira De Oliveira Cubertino</a>
 
-## Professores Orientadores: <a href="https://www.linkedin.com/in/katia-bossi/" target="_blank"> Kátia Bossi</a>, <a href="https://br.linkedin.com/in/marco-aurelio-lima-barbosa" target="_blank"> Marco Aurélio Lima Barbosa</a>, <a href="https://br.linkedin.com/in/rodrigo-da-rosa-phd" target="_blank"> Rodrigo da Rosa</a>, <a href="https://br.linkedin.com/in/victorbarq" target="_blank"> Victor Bruno Alexander Rosetti de Quiroz</a><br/>
+## Professores Orientadores: <a href="LINK_DO_EDUARDO" target="_blank">Eduardo Savino Gomes</a>, <a href="LINK_DO_LUIS" target="_blank">Luis Fernando dos Santos Pires</a>, <a href="LINK_DO_MAURICIO" target="_blank">Mauricio Lopes Da Cunha</a>, <a href="LINK_DO_RDRodnil" target="_blank">RdRodnil da Silva Moreira Lisboa</a><br/>
 
 ## Descrição
 
 <p align="center">
   <img src="/Imagens/Logo ref.png" 
-       alt="Alinha+" 
+       alt="colocar logo depois" 
        border="5" 
        width="300">
 </p>
