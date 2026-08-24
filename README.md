@@ -8,7 +8,7 @@
 
 ## Integrantes: <a href="https://github.com/rodriguesbrun">Bruno Rodrigues Da Costa</a>, <a href="https://www.linkedin.com/in/guilherme-monteiro14/">Guilherme Monteiro Da Silva</a>, <a href="https://github.com/DebatingAlpaca">João Pedro Da Silva</a>, <a href="https://github.com/StefanyO8">Stefany Samira De Oliveira Cubertino</a>
 
-## Professores Orientadores: <a href="LINK_DO_EDUARDO" target="_blank">Eduardo Savino Gomes</a>, <a href="LINK_DO_LUIS" target="_blank">Luis Fernando dos Santos Pires</a>, <a href="LINK_DO_MAURICIO" target="_blank">Mauricio Lopes Da Cunha</a>, <a href="LINK_DO_RDRodnil" target="_blank">RdRodnil da Silva Moreira Lisboa</a><br/>
+## Professores Orientadores: <a href="LINK_DO_EDUARDO" target="_blank">Eduardo Savino Gomes</a>, <a href="LINK_DO_LUIS" target="_blank">Luis Fernando dos Santos Pires</a>, <a href="LINK_DO_MAURICIO" target="_blank">Mauricio Lopes Da Cunha</a>, <a href="LINK_DO_RDRodnil" target="_blank">Rodnil da Silva Moreira Lisboa</a><br/>
 
 ## Descrição
 
