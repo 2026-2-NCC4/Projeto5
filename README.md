@@ -20,27 +20,25 @@
 </p>
 
 
-<p>
-Visão Geral do Projeto<br>
-O projeto visa modernizar a gestão e o atendimento da fisioterapeuta Maya Yoshiko Yamamoto, especialista em Reeducação Postural Global (RPG). Atualmente, a falta de padronização nos registros dificulta a rastreabilidade dos prontuários e o engajamento dos pacientes. Nossa solução propõe um ecossistema digital composto por um Módulo Web administrativo, um Aplicativo Mobile para pacientes e um Backend robusto.
 
-Arquitetura e Desenvolvimento (POO)<br>
-Na primeira etapa do projeto, estabelecemos a base lógica do sistema através da Programação Orientada a Objetos (POO). Implementamos uma estrutura de herança onde a classe base Usuario garante a segurança dos dados via senhaHash, derivando para as classes específicas Administrador (Maya) e Paciente. A interface TelaUsuario foi desenhada para centralizar as operações de CRUD, permitindo o gerenciamento eficiente de usuários e planos de tratamento.
+<p>
+<b>Visão Geral do Projeto</b><br>
+O DataCore é um projeto interdisciplinar desenvolvido para a CTI, empresa voltada a soluções financeiras, consultoria e análise de dados. A proposta é transformar uma base de dados financeiros simulados em uma solução de apoio à análise e à tomada de decisão.
+
+A base disponibilizada pela CTI contém 12 anos e 1.200 cenários simulados para cada ano. Cada cenário representa uma possibilidade de futuro para a mesma empresa, permitindo analisar não apenas valores médios, mas também a variabilidade e os diferentes comportamentos possíveis dentro das simulações.
+
+<b>Problema e abordagem</b><br>
+A investigação inicial identificou uma possível divergência entre o crescimento dos indicadores contábeis e a geração de caixa. Enquanto Receita, EBITDA e Resultado Líquido apresentam crescimento ao longo do horizonte, a Geração de Caixa apresenta maior variabilidade e períodos com comportamento negativo, com destaque para o Ano 12.
+
+A partir dessa observação, a equipe definiu indicadores financeiros para acompanhar o desempenho da empresa, incluindo Receita, Margem EBITDA, Resultado Líquido, Geração de Caixa e o Índice de Conversão de Lucro em Caixa (ICC). As análises descritiva e inferencial serão utilizadas como base para a construção do produto final.
+
+<b>Produto</b><br>
+O objetivo final é desenvolver uma plataforma interativa que permita visualizar os principais indicadores, comparar os diferentes anos e cenários e apoiar a interpretação dos riscos e oportunidades presentes nas simulações financeiras.
+
+Nesta etapa inicial do projeto, já foram realizadas as análises e validações referentes às primeiras entregas de Contabilidade e Finanças e de Análise Inferencial. O desenvolvimento da plataforma e das demais funcionalidades ocorrerá nas próximas etapas do projeto.
 
 </p>
 
-## <img src="https://img.icons8.com/?size=100&id=zfHRZ6i1Wg0U&format=png&color=000000" width="20" height="20"/> Protótipo navegável no Figma
-<a href="https://www.figma.com/design/V2nRTpQ0EYJirOb14HC2ln/Alinha--?node-id=1-3&t=PnWBeycB26CRRtlZ-1">Protótipo navegável</a>
-
-## <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQFggf9yNRN9xCYku8XMEkSE0LU9uMhkYbehQ&s" width="20" height="20"/> Link para o Site
-<a href="https://alinha-mais.vercel.app">Link para App</a>
-
-# Login adm:
-<p>admin@exemplo.com</p>
-<p>123456</p>
-
-
-<a href="https://drive.google.com/file/d/1Q3j9Mctuf6AGw1u8kAA7rW3bMannkA4P/view?usp=drivesdk">ARQUIVO PI</a>
 
 
 ## 🛠 Estrutura de pastas
@@ -60,15 +58,15 @@ Na primeira etapa do projeto, estabelecemos a base lógica do sistema através d
 │
 ├── Documentos
 │   ├── Entrega 1
-│   │   ├── Entrega Análise Descritiva de Dados
-│   │   ├── Entrega Programação Orientada a Objetos e Estrutura de Dados
-│   │   ├── Entrega Programação para Dispositivos Móveis
-│   │   └── Entrega Projeto Interdisciplinar: Aplicativo Móvel
+│   │   ├── Entrega Análise Inferencial de Dados
+│   │   ├── Entrega Contabilidade e Finanças
+│   │   ├── Entrega Engenharia de Software e Arquitetura de Sistemas
+│   │   └── Entrega Projeto Interdisciplinar Ciência de Dados
 │   └── Entrega 2
-│       ├── Entrega Análise Descritiva de Dados
-│       ├── Entrega Programação Orientada a Objetos e Estrutura de Dados
-│       ├── Entrega Programação para Dispositivos Móveis
-│       └── Entrega Projeto Interdisciplinar: Aplicativo Móvel
+│       ├── Entrega Análise Inferencial de Dados
+│       ├── Entrega Contabilidade e Finanças
+│       ├── Entrega Engenharia de Software e Arquitetura de Sistemas
+│       └── Entrega Projeto Interdisciplinar Ciência de Dados
 │
 └── README.md
 </pre>
@@ -89,59 +87,38 @@ Há também X pastas que seguem da seguinte forma:
 
 
 
-## 🛠 Instalação
+### 🛠 Instalação
 
-Não há instalação! Baixe o App por <a href="https://projeto-interdisciplinar-webcrawlers.vercel.app/">Este Link!</a>
+O projeto encontra-se em desenvolvimento. As análises realizadas até o momento são executadas principalmente por meio de notebooks Python/Jupyter.
 
-## 💻 Configuração para Desenvolvimento
-
-### 1. Clonar o repositório
-
+Para obter o projeto:
 ```bash
-git clone https://github.com/2026-1-NCC3/Projeto3
-cd Projeto3
+git clone https://github.com/2026-2-NCC4/Projeto5
+cd Projeto5
 ```
+As instruções de execução da plataforma serão atualizadas nesta seção conforme o dashboard for implementado e publicado.
 
----
+### 💻 Configuração para Desenvolvimento
 
-### 2. Backend (API)
-
+1. Clonar o repositório
 ```bash
-cd src/Entrega 2/Backend
-npm install
+git clone https://github.com/2026-2-NCC4/Projeto5
+cd Projeto5
 ```
+2. Criar o ambiente Python
 
-> Crie um arquivo `.env` na pasta `back` com as variáveis de ambiente necessárias.
-
+Recomenda-se utilizar um ambiente virtual para instalar as dependências do projeto:
 ```bash
-npm run dev
+python -m venv .venv
 ```
-
-A API estará disponível em `http://localhost:3000` (ou a porta definida no `.env`).
-
----
-
-### 3. Frontend Web
-
-```bash
-cd src/Entrega 2/Frontend/Web
-npm install
-npm start
+No Windows:
 ```
-
-O painel web estará disponível em `http://localhost:3000`.
-
----
-
-### 4. Aplicativo Mobile (Android)
-
-1. Abra o **Android Studio**
-2. Selecione **Open** e navegue até a pasta `src/Entrega 2/Frontend/App`
-3. Aguarde a sincronização do Gradle
-4. Conecte um dispositivo Android ou inicie um emulador
-5. Clique em **Run ▶**
-
-
+.venv\Scripts\activate
+```
+No Linux/macOS:
+```
+source .venv/bin/activate
+```
 
 
 ## 📋 Licença/License
@@ -151,11 +128,14 @@ O painel web estará disponível em `http://localhost:3000`.
 
 ## 🎓 Referências
 
-Aqui estão as referências usadas no projeto.
+Aqui estão as principais referências e ferramentas utilizadas no desenvolvimento do projeto.
 
-1. <a href="https://nodejs.org/en/docs">Node.js</a>
-2. <a href="https://react.dev">React</a>
-3. <a href="https://developer.android.com/studio/intro?hl=pt-br">Android Studio</a>
-4. <a href="https://sqlitecloud.io/docs">SQLite Cloud</a>
-5. <a href="https://render.com/docs">Render (deploy)</a>
-6. <a href="https://help.figma.com">Figma</a>
+1. <a href="https://www.python.org/">Python</a>
+2. <a href="https://pandas.pydata.org/">Pandas</a>
+3. <a href="https://numpy.org/">NumPy</a>
+4. <a href="https://matplotlib.org/">Matplotlib</a>
+5. <a href="https://seaborn.pydata.org/">Seaborn</a>
+6. <a href="https://www.statsmodels.org/">Statsmodels</a>
+7. <a href="https://streamlit.io/">Streamlit</a>
+8. <a href="https://jupyter.org/">Jupyter</a>
+9. <a href="https://colab.research.google.com/">Google Colab</a>
