@@ -4,6 +4,7 @@
 <a href= "https://www.fecap.br/"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhZPrRa89Kma0ZZogxm0pi-tCn_TLKeHGVxywp-LXAFGR3B1DPouAJYHgKZGV0XTEf4AE&usqp=CAU" alt="FECAP - Fundação de Comércio Álvares Penteado" border="0"></a>
 </p>
 
+
 <h1>DataCore</h1>
 
 ## Integrantes: <a href="https://github.com/rodriguesbrun">Bruno Rodrigues Da Costa</a>, <a href="https://www.linkedin.com/in/guilherme-monteiro14/">Guilherme Monteiro Da Silva</a>, <a href="https://github.com/DebatingAlpaca">João Pedro Da Silva</a>, <a href="https://github.com/StefanyO8">Stefany Samira De Oliveira Cubertino</a>
@@ -19,7 +20,9 @@
        width="300">
 </p>
 
-
+<p align="center">
+  <a href="https://drive.google.com/file/d/14UuWQmCJLFeeGj-yEF9QwDimVzR_On6b/view?usp=sharing">Documento PI</a>
+</p>
 
 <p>
 <b>Visão Geral do Projeto</b><br>
