@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DataCore · Análise da simulação CTI</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<style>
+:root {
+  --fundo: #f6f7f9;
+  --painel: #ffffff;
+  --texto: #1b2430;
+  --suave: #5b6675;
+  --linha: #dde2e8;
+  --azul: #1f3864;
+  --laranja: #c55a11;
+  --verde: #2f7d4f;
+  --erro: #a32121;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fundo);
+  color: var(--texto);
+  line-height: 1.5;
+}
+header { background: var(--azul); color: #fff; padding: 20px 24px; }
+header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+header p { margin: 4px 0 0; color: #c9d4ea; font-size: 0.95rem; }
+main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+section { background: var(--painel); border: 1px solid var(--linha); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+h2 { margin: 0 0 12px; font-size: 1.1rem; }
+.upload { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+input[type=file] { font: inherit; }
+#status { margin-top: 12px; color: var(--suave); }
+#status.erro { color: var(--erro); font-weight: 600; }
+#status.ok { color: var(--verde); }
+progress { width: 100%; height: 6px; margin-top: 8px; display: none; }
+.filtros { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px; }
+label { font-size: 0.9rem; color: var(--suave); }
+select { font: inherit; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; margin-left: 6px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.kpi { border: 1px solid var(--linha); border-radius: 8px; padding: 14px; }
+.kpi .nome { font-size: 0.85rem; color: var(--suave); }
+.kpi .valor { font-size: 1.5rem; font-weight: 600; margin-top: 4px; }
+.kpi .nota { font-size: 0.78rem; color: var(--suave); margin-top: 2px; }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(420px, 1fr)); gap: 20px; }
+.grafico { min-height: 340px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--linha); text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { background: var(--azul); color: #fff; font-weight: 500; }
+.aviso { background: #fff7e8; border: 1px solid #f0d9a8; border-radius: 6px; padding: 10px 12px; font-size: 0.88rem; margin-top: 12px; }
+.rolagem { overflow-x: auto; }
+footer { text-align: center; color: var(--suave); font-size: 0.85rem; padding: 0 24px 32px; }
+.oculto { display: none; }
+@media (max-width: 520px) { .grade { grid-template-columns: 1fr; } main { padding: 12px; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>DataCore · Simulação CTI Global</h1>
+  <p>Carregue o Demonstrativo_Fecap_v3.csv. A análise roda no seu navegador e o arquivo não é enviado a nenhum servidor.</p>
+</header>
+<main>
+  <section>
+    <h2>1. Carregar dados</h2>
+    <div class="upload">
+      <input type="file" id="arquivo" accept=".csv,text/csv" disabled>
+    </div>
+    <progress id="progresso"></progress>
+    <div id="status">Preparando o ambiente Python...</div>
+  </section>
+
+  <div id="painel" class="oculto">
+    <section>
+      <h2>2. Indicadores</h2>
+      <div class="filtros">
+        <label>Ano <select id="filtro-ano"></select></label>
+        <span id="aviso-ano12" class="oculto" style="color:var(--laranja);font-size:0.88rem">O Ano 12 é o encerramento da concessão e não é comparável aos demais.</span>
+      </div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+
+    <section>
+      <h2>3. Lucro versus caixa</h2>
+      <div class="grade">
+        <div id="g-evolucao" class="grafico"></div>
+        <div id="g-conversao" class="grafico"></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>4. Distribuição entre os cenários</h2>
+      <div class="filtros">
+        <label>Conta <select id="filtro-conta"></select></label>
+        <label>Ano do histograma <select id="filtro-ano-hist"></select></label>
+      </div>
+      <div class="grade">
+        <div id="g-hist" class="grafico"></div>
+        <div id="g-box" class="grafico"></div>
+      </div>
+      <div class="rolagem" style="margin-top:16px"><table id="t-descritivas"></table></div>
+    </section>
+
+    <section>
+      <h2>5. Regressão: o que explica a Geração de Caixa</h2>
+      <div class="grade">
+        <div id="g-r2" class="grafico"></div>
+        <div id="g-coef" class="grafico"></div>
+      </div>
+      <div class="rolagem" style="margin-top:16px"><table id="t-agrupado"></table></div>
+      <div class="rolagem" style="margin-top:16px"><table id="t-ano12"></table></div>
+      <div class="aviso">
+        Valores em R$ milhões. Os coeficientes descrevem associações nos dados simulados, não causas. Nesta versão os erros-padrão são os do MQO simples; a versão com erros robustos (HC3) e agrupados por cenário entra na próxima etapa.
+      </div>
+    </section>
+  </div>
+</main>
+<footer>Protótipo · Projeto Interdisciplinar FECAP · Dados simulados (Monte Carlo)</footer>
+
+<script>
+const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
+const ROTULOS = {
+  receita: 'Receita',
+  ebitda: 'EBITDA (recalculado)',
+  lucro_liquido: 'Resultado líquido',
+  caixa: 'Geração de caixa',
+  dist: 'Distribuição ao acionista',
+  saldo_final: 'Saldo final',
+  capex: 'CAPEX',
+  despfin: 'Despesas financeiras'
+};
+const CORES = { azul: '#1f3864', laranja: '#c55a11', cinza: '#7f7f7f', verde: '#2f7d4f' };
+const $ = id => document.getElementById(id);
+
+let pyodide = null;
+let analise = null;
+let resultado = null;
+
+function status(texto, tipo) {
+  const el = $('status');
+  el.textContent = texto;
+  el.className = tipo || '';
+}
+
+function carregando(ativo) {
+  $('progresso').style.display = ativo ? 'block' : 'none';
+}
+
+function proximoQuadro() {
+  return new Promise(resolve => setTimeout(resolve, 60));
+}
+
+function fmt(valor, casas) {
+  if (valor === null || valor === undefined) return 'n/d';
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+}
+
+function pct(valor, casas) {
+  if (valor === null || valor === undefined) return 'n/d';
+  return fmt(valor * 100, casas === undefined ? 1 : casas) + '%';
+}
+
+async function iniciarPython() {
+  try {
+    carregando(true);
+    status('Baixando o Python do navegador (só na primeira vez, cerca de 20 segundos)...');
+    pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
+    await pyodide.loadPackage(['numpy', 'pandas']);
+    const codigo = await (await fetch('python/analise.py')).text();
+    pyodide.FS.writeFile('/home/pyodide/analise.py', codigo);
+    pyodide.runPython("import sys\nif '/home/pyodide' not in sys.path:\n    sys.path.insert(0, '/home/pyodide')");
+    analise = pyodide.pyimport('analise');
+    $('arquivo').disabled = false;
+    status('Pronto. Escolha o arquivo CSV.', 'ok');
+  } catch (erro) {
+    status('Não foi possível iniciar o Python: ' + erro.message, 'erro');
+  } finally {
+    carregando(false);
+  }
+}
+
+async function processarArquivo(arquivo) {
+  try {
+    carregando(true);
+    $('painel').classList.add('oculto');
+    status('Lendo o arquivo (' + (arquivo.size / 1e6).toFixed(1) + ' MB)...');
+    await proximoQuadro();
+    const buffer = new Uint8Array(await arquivo.arrayBuffer());
+    pyodide.FS.writeFile('/tmp/dados.csv', buffer);
+    status('Processando no Python. Com o arquivo completo isso pode levar até um minuto e a página fica parada...');
+    await proximoQuadro();
+    const inicio = performance.now();
+    const texto = analise.processar('/tmp/dados.csv');
+    resultado = JSON.parse(texto);
+    const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
+    const r = resultado.resumo;
+    status(
+      'Concluído em ' + segundos + ' s: ' + fmt(r.linhas_lidas, 0) + ' linhas, ' + fmt(r.cenarios, 0) +
+      ' cenários, ' + r.anos.length + ' anos (codificação ' + r.encoding + ').',
+      'ok'
+    );
+    montarPainel();
+    $('painel').classList.remove('oculto');
+  } catch (erro) {
+    const mensagem = String(erro.message || erro).split('\n').filter(Boolean).pop();
+    status('Erro ao processar: ' + mensagem, 'erro');
+  } finally {
+    carregando(false);
+  }
+}
+
+function preencherSelect(el, opcoes, valorInicial) {
+  el.innerHTML = '';
+  opcoes.forEach(op => {
+    const o = document.createElement('option');
+    o.value = op.valor;
+    o.textContent = op.texto;
+    el.appendChild(o);
+  });
+  if (valorInicial !== undefined) el.value = valorInicial;
+}
+
+function montarPainel() {
+  const anos = resultado.resumo.anos;
+  const opcoesAno = anos.map(a => ({ valor: a, texto: 'Ano ' + a }));
+  const ultimoRegular = anos.filter(a => a <= 11).pop() || anos[anos.length - 1];
+  preencherSelect($('filtro-ano'), opcoesAno, ultimoRegular);
+  preencherSelect($('filtro-ano-hist'), opcoesAno, anos[anos.length - 1]);
+  preencherSelect(
+    $('filtro-conta'),
+    ['caixa', 'receita', 'ebitda', 'lucro_liquido', 'dist', 'saldo_final'].map(c => ({ valor: c, texto: ROTULOS[c] })),
+    'caixa'
+  );
+  desenharKpis();
+  desenharEvolucao();
+  desenharConversao();
+  desenharDistribuicao();
+  desenharTabelaDescritivas();
+  desenharRegressoes();
+}
+
+function linhaDoAno(ano) {
+  return resultado.por_ano.find(l => l.ano === Number(ano));
+}
+
+function desenharKpis() {
+  const ano = $('filtro-ano').value;
+  $('aviso-ano12').classList.toggle('oculto', Number(ano) !== 12);
+  const l = linhaDoAno(ano);
+  const anterior = linhaDoAno(Number(ano) - 1);
+  const variacao = campo => {
+    if (!anterior || !anterior[campo]) return '';
+    const v = l[campo] / anterior[campo] - 1;
+    return (v >= 0 ? '+' : '') + fmt(v * 100, 1) + '% vs. ano anterior';
+  };
+  const cartoes = [
+    { nome: 'Receita média', valor: 'R$ ' + fmt(l.receita, 0) + ' mi', nota: variacao('receita') },
+    { nome: 'EBITDA médio (recalculado)', valor: 'R$ ' + fmt(l.ebitda, 0) + ' mi', nota: variacao('ebitda') },
+    { nome: 'Margem EBITDA', valor: pct(l.margem_ebitda), nota: 'EBITDA ÷ Receita' },
+    { nome: 'Geração de caixa média', valor: 'R$ ' + fmt(l.caixa, 0) + ' mi', nota: 'Fluxo de caixa do ano' },
+    { nome: 'Conversão lucro em caixa', valor: fmt(l.conversao, 2), nota: 'Geração de caixa ÷ Resultado líquido' },
+    { nome: 'Saldo final médio', valor: 'R$ ' + fmt(l.saldo_final, 0) + ' mi', nota: variacao('saldo_final') }
+  ];
+  $('kpis').innerHTML = cartoes.map(c =>
+    '<div class="kpi"><div class="nome">' + c.nome + '</div><div class="valor">' + c.valor +
+    '</div><div class="nota">' + (c.nota || '&nbsp;') + '</div></div>'
+  ).join('');
+}
+
+const LAYOUT_BASE = {
+  margin: { t: 40, r: 20, b: 50, l: 60 },
+  paper_bgcolor: 'rgba(0,0,0,0)',
+  plot_bgcolor: 'rgba(0,0,0,0)',
+  font: { family: 'system-ui, sans-serif', size: 12, color: '#1b2430' },
+  legend: { orientation: 'h', y: -0.2 }
+};
+const CONFIG = { responsive: true, displaylogo: false };
+
+function layout(extra) {
+  return Object.assign({}, LAYOUT_BASE, extra);
+}
+
+function desenharEvolucao() {
+  const t = resultado.por_ano;
+  const x = t.map(l => 'Ano ' + l.ano);
+  const serie = (campo, nome, cor) => ({ x, y: t.map(l => l[campo]), name: nome, mode: 'lines+markers', line: { color: cor } });
+  Plotly.newPlot('g-evolucao', [
+    serie('ebitda', ROTULOS.ebitda, CORES.azul),
+    serie('lucro_liquido', ROTULOS.lucro_liquido, CORES.verde),
+    serie('caixa', ROTULOS.caixa, CORES.laranja)
+  ], layout({ title: { text: 'Médias por ano (R$ milhões)', font: { size: 14 } } }), CONFIG);
+}
+
+function desenharConversao() {
+  const t = resultado.por_ano;
+  Plotly.newPlot('g-conversao', [{
+    type: 'bar',
+    x: t.map(l => 'Ano ' + l.ano),
+    y: t.map(l => l.conversao),
+    marker: { color: t.map(l => (l.ano === 12 ? CORES.cinza : CORES.azul)) },
+    hovertemplate: '%{x}: %{y:.2f}<extra></extra>'
+  }], layout({
+    title: { text: 'Quanto do lucro líquido vira caixa', font: { size: 14 } },
+    yaxis: { title: 'Geração de caixa ÷ Resultado líquido' },
+    shapes: [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 1, y1: 1, line: { color: CORES.laranja, dash: 'dash' } }]
+  }), CONFIG);
+}
+
+function desenharDistribuicao() {
+  const conta = $('filtro-conta').value;
+  const anoHist = Number($('filtro-ano-hist').value);
+  const d = resultado.dados;
+  const valoresAno = [];
+  const porAno = {};
+  for (let i = 0; i < d.n.length; i++) {
+    const n = d.n[i];
+    if (!porAno[n]) porAno[n] = [];
+    porAno[n].push(d[conta][i]);
+    if (n === anoHist) valoresAno.push(d[conta][i]);
+  }
+  Plotly.newPlot('g-hist', [{
+    type: 'histogram', x: valoresAno, nbinsx: 40, marker: { color: CORES.azul }
+  }], layout({
+    title: { text: ROTULOS[conta] + ' no Ano ' + anoHist, font: { size: 14 } },
+    xaxis: { title: 'R$ milhões' }, yaxis: { title: 'Cenários' }
+  }), CONFIG);
+  const anos = Object.keys(porAno).map(Number).sort((a, b) => a - b);
+  Plotly.newPlot('g-box', anos.map(a => ({
+    type: 'box', y: porAno[a], name: String(a), boxpoints: 'outliers',
+    marker: { color: CORES.azul, size: 3 }, line: { width: 1 }
+  })), layout({
+    title: { text: ROTULOS[conta] + ' por ano', font: { size: 14 } },
+    yaxis: { title: 'R$ milhões' }, xaxis: { title: 'Ano' }, showlegend: false
+  }), CONFIG);
+}
+
+function desenharTabelaDescritivas() {
+  const linhas = resultado.descritivas.map(l =>
+    '<tr><td>' + ROTULOS[l.conta] + '</td><td>' + fmt(l.media, 1) + '</td><td>' + fmt(l.mediana, 1) +
+    '</td><td>' + fmt(l.desvio, 1) + '</td><td>' + fmt(l.minimo, 1) + '</td><td>' + fmt(l.maximo, 1) +
+    '</td><td>' + fmt(l.pct_outliers, 1) + '%</td></tr>'
+  ).join('');
+  $('t-descritivas').innerHTML =
+    '<tr><th>Conta (R$ milhões, todos os anos)</th><th>Média</th><th>Mediana</th><th>Desvio padrão</th><th>Mínimo</th><th>Máximo</th><th>Fora dos limites IQR</th></tr>' + linhas;
+}
+
+function desenharRegressoes() {
+  const reg = resultado.regressoes;
+  const anos = reg.por_ano.map(l => 'Ano ' + l.ano);
+  Plotly.newPlot('g-r2', [
+    { type: 'bar', x: anos, y: reg.por_ano.map(l => l.r2_modelo1), name: 'Só EBITDA', marker: { color: CORES.cinza } },
+    { type: 'bar', x: anos, y: reg.por_ano.map(l => l.r2), name: 'EBITDA + CAPEX + desp. fin.', marker: { color: CORES.azul } }
+  ], layout({
+    title: { text: 'R² por ano', font: { size: 14 } }, barmode: 'group', yaxis: { range: [0, 1.05], title: 'R²' }
+  }), CONFIG);
+
+  const coef = nome => reg.por_ano.map(l => l.coeficientes.find(c => c.variavel === nome));
+  const barras = (nome, cor) => {
+    const itens = coef(nome);
+    return {
+      type: 'scatter', mode: 'markers', x: anos, y: itens.map(c => c.coef), name: ROTULOS[nome],
+      error_y: { type: 'data', array: itens.map(c => (c.erro_padrao === null ? 0 : 1.96 * c.erro_padrao)), visible: true },
+      marker: { color: cor, size: 8 }
+    };
+  };
+  Plotly.newPlot('g-coef', [barras('ebitda', CORES.azul)], layout({
+    title: { text: 'Coeficiente do EBITDA por ano (IC 95% aproximado)', font: { size: 14 } },
+    yaxis: { title: 'R$ de caixa por R$ 1 de EBITDA', zeroline: true }, showlegend: false
+  }), CONFIG);
+
+  const ag = reg.agrupado;
+  if (ag) {
+    const c = nome => ag.coeficientes.find(x => x.variavel === nome).coef;
+    $('t-agrupado').innerHTML =
+      '<tr><th>Todos os anos (1 a 11), com efeito fixo de ano</th><th>Valor</th></tr>' +
+      '<tr><td>Modelo 1 (só EBITDA): coeficiente</td><td>' + fmt(ag.coef_ebitda_modelo1, 3) + '</td></tr>' +
+      '<tr><td>Modelo 1 (só EBITDA): R²</td><td>' + fmt(ag.r2_modelo1, 3) + '</td></tr>' +
+      '<tr><td>Modelo 3: coeficiente do EBITDA</td><td>' + fmt(c('ebitda'), 3) + '</td></tr>' +
+      '<tr><td>Modelo 3: coeficiente do CAPEX</td><td>' + fmt(c('capex'), 3) + '</td></tr>' +
+      '<tr><td>Modelo 3: coeficiente das despesas financeiras</td><td>' + fmt(c('despfin'), 3) + '</td></tr>' +
+      '<tr><td>Modelo 3: R² interno (within)</td><td>' + fmt(ag.r2_interno, 3) + '</td></tr>' +
+      '<tr><td>Modelo 3: RMSE (R$ milhões)</td><td>' + fmt(ag.rmse, 1) + '</td></tr>' +
+      '<tr><td>Observações</td><td>' + fmt(ag.n, 0) + '</td></tr>';
+  } else {
+    $('t-agrupado').innerHTML = '';
+  }
+
+  if (reg.ano12.length) {
+    const linhas = reg.ano12.map(m =>
+      '<tr><td>' + m.modelo + '</td><td>' + fmt(m.r2, 3) + '</td><td>' +
+      m.coeficientes.map(c => ROTULOS[c.variavel] + ': ' + fmt(c.coef, 3)).join('<br>') + '</td></tr>'
+    ).join('');
+    $('t-ano12').innerHTML = '<tr><th>Ano 12 (modelos separados)</th><th>R²</th><th>Coeficientes</th></tr>' + linhas;
+  } else {
+    $('t-ano12').innerHTML = '';
+  }
+}
+
+$('arquivo').addEventListener('change', e => {
+  const arquivo = e.target.files[0];
+  if (arquivo) processarArquivo(arquivo);
+});
+$('filtro-ano').addEventListener('change', desenharKpis);
+$('filtro-conta').addEventListener('change', desenharDistribuicao);
+$('filtro-ano-hist').addEventListener('change', desenharDistribuicao);
+
+iniciarPython();
+</script>
+</body>
+</html>
