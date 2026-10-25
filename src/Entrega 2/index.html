@@ -8,32 +8,18 @@
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <style>
 :root {
-  --fundo: #f6f7f9;
-  --painel: #ffffff;
-  --texto: #1b2430;
-  --suave: #5b6675;
-  --linha: #dde2e8;
-  --azul: #1f3864;
-  --laranja: #c55a11;
-  --verde: #2f7d4f;
-  --erro: #a32121;
+  --fundo: #f6f7f9; --painel: #ffffff; --texto: #1b2430; --suave: #5b6675;
+  --linha: #dde2e8; --azul: #1f3864; --laranja: #c55a11; --verde: #2f7d4f; --erro: #a32121;
 }
 * { box-sizing: border-box; }
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  background: var(--fundo);
-  color: var(--texto);
-  line-height: 1.5;
-}
+body { margin: 0; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--fundo); color: var(--texto); line-height: 1.5; }
 header { background: var(--azul); color: #fff; padding: 20px 24px; }
 header h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
 header p { margin: 4px 0 0; color: #c9d4ea; font-size: 0.95rem; }
 main { max-width: 1200px; margin: 0 auto; padding: 24px; }
-section { background: var(--painel); border: 1px solid var(--linha); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+section { background: var(--painel); border: 1px solid var(--linha); border-radius: 8px; padding: 20px; margin-bottom: 20px; overflow: hidden; }
 h2 { margin: 0 0 12px; font-size: 1.1rem; }
 .upload { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-input[type=file] { font: inherit; }
 #status { margin-top: 12px; color: var(--suave); }
 #status.erro { color: var(--erro); font-weight: 600; }
 #status.ok { color: var(--verde); }
@@ -42,38 +28,60 @@ progress { width: 100%; height: 6px; margin-top: 8px; display: none; }
 label { font-size: 0.9rem; color: var(--suave); }
 select { font: inherit; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; margin-left: 6px; }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
-.kpi { border: 1px solid var(--linha); border-radius: 8px; padding: 14px; }
+.kpi { border: 1px solid var(--linha); border-radius: 8px; padding: 14px; border-left: 6px solid var(--linha); }
 .kpi .nome { font-size: 0.85rem; color: var(--suave); }
 .kpi .valor { font-size: 1.5rem; font-weight: 600; margin-top: 4px; }
 .kpi .nota { font-size: 0.78rem; color: var(--suave); margin-top: 2px; }
-.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; }
-.grade > * { min-width: 0; }
-.grafico { min-height: 360px; width: 100%; overflow: hidden; }
-section { overflow: hidden; }
-.kpi { border-left-width: 6px; }
 .kpi.bom { border-left-color: var(--verde); background: #f3faf5; }
 .kpi.atencao { border-left-color: #d49a00; background: #fff9e8; }
 .kpi.ruim { border-left-color: var(--erro); background: #fdf1f1; }
-.kpi.neutro { border-left-color: var(--linha); }
-.selo { display: inline-block; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.03em; padding: 2px 8px; border-radius: 10px; color: #fff; margin-bottom: 6px; }
+.selo { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; color: #fff; margin-bottom: 6px; }
 .selo.bom { background: var(--verde); }
 .selo.atencao { background: #d49a00; }
 .selo.ruim { background: var(--erro); }
-.selo.neutro { background: var(--suave); }
 .motivo { font-size: 0.82rem; margin-top: 8px; color: var(--texto); }
-.resumo { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: var(--fundo); border: 1px solid var(--linha); }
-.resumo .chip { font-weight: 700; padding: 4px 12px; border-radius: 14px; color: #fff; font-size: 0.9rem; }
-.chip.bom { background: var(--verde); }
-.chip.atencao { background: #d49a00; }
-.chip.ruim { background: var(--erro); }
-table.mapa th, table.mapa td { text-align: center; padding: 6px 4px; font-size: 0.8rem; }
-table.mapa td:first-child, table.mapa th:first-child { text-align: left; white-space: nowrap; padding-left: 10px; }
-table.mapa td.c { color: #fff; font-weight: 700; }
+.grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; }
+.grafico { min-height: 360px; width: 100%; overflow: hidden; }
+table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--linha); text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { background: var(--azul); color: #fff; }
+.oculto { display: none; }
+.linha-mapa { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 8px 10px; border: 1px solid var(--linha); border-left: 4px solid var(--linha); border-radius: 6px; background: #fff; }
+.linha-mapa.mapeado { border-left-color: var(--verde); background: #f9fdfb; }
+.linha-mapa.pendente { border-left-color: var(--erro); background: #fdf6f6; }
+.linha-mapa.opcional { border-left-color: #d49a00; }
+.linha-mapa label { flex: 1; color: var(--texto); font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.linha-mapa select { flex: 2; }
+.etiqueta-mapa { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+.etiqueta-mapa.auto { background: #e3f4e8; color: var(--verde); }
+.etiqueta-mapa.manual { background: #e6eefc; color: var(--azul); }
+.etiqueta-mapa.pendente { background: #fce8e8; color: var(--erro); }
+.etiqueta-mapa.opcional { background: #fff4d6; color: #946800; }
+button.acao.secundario { background: #fff; color: var(--azul); }
+button.acao.secundario:hover { background: #eef2f8; }
+button.acao.perigo { background: #fff; color: var(--erro); border-color: var(--erro); padding: 4px 10px; font-size: 0.82rem; }
+button.acao.perigo:hover { background: #fdf1f1; }
+.acoes-mapeamento { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.bloco-extras { margin-top: 20px; padding-top: 16px; border-top: 1px dashed var(--linha); }
+.bloco-extras h3 { margin: 0 0 6px; font-size: 1rem; color: var(--azul); }
+.bloco-extras p { margin: 0 0 12px; font-size: 0.88rem; color: var(--suave); }
+.cartao-extra { border: 1px solid var(--linha); border-left: 4px solid var(--azul); border-radius: 6px; padding: 12px; margin-bottom: 10px; background: var(--fundo); }
+.cabecalho-extra { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.grade-extra { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; align-items: center; }
+.campo-form { display: flex; flex-direction: column; gap: 4px; }
+.campo-form label { font-size: 0.82rem; font-weight: 600; color: var(--texto); }
+.campo-form input[type="text"], .campo-form select { font: inherit; padding: 6px 8px; border: 1px solid var(--linha); border-radius: 6px; background: #fff; margin-left: 0; width: 100%; }
+.opcoes-escala { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--texto); margin-top: 6px; }
+.ajuda-formula { margin-top: 8px; font-size: 0.8rem; color: var(--suave); }
+.chips-variaveis { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.chip-var { font: inherit; font-size: 0.76rem; padding: 2px 8px; border: 1px solid var(--linha); border-radius: 12px; background: #fff; color: var(--azul); cursor: pointer; }
+.chip-var:hover { background: #e6eefc; border-color: var(--azul); }
+.codigo-id { font-family: monospace; font-size: 0.78rem; background: #e6eefc; color: var(--azul); padding: 2px 6px; border-radius: 4px; }
+td.c { color: #fff; font-weight: 700; text-align: center; }
 td.c.bom { background: var(--verde); }
 td.c.atencao { background: #d49a00; }
 td.c.ruim { background: var(--erro); }
-td.c.neutro { background: #c9cfd7; }
-.legenda { font-size: 0.82rem; color: var(--suave); margin-top: 8px; }
 .achado { border: 1px solid var(--linha); border-left-width: 6px; border-radius: 8px; padding: 12px 14px; margin-bottom: 10px; }
 .achado.bom { border-left-color: var(--verde); }
 .achado.atencao { border-left-color: #d49a00; }
@@ -83,58 +91,72 @@ td.c.neutro { background: #c9cfd7; }
 .achado p { margin: 0; font-size: 0.9rem; }
 button.acao { font: inherit; padding: 8px 14px; border: 1px solid var(--azul); background: var(--azul); color: #fff; border-radius: 6px; cursor: pointer; }
 button.acao:hover { background: #2b4a85; }
-table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
-th, td { padding: 6px 10px; border-bottom: 1px solid var(--linha); text-align: right; }
-th:first-child, td:first-child { text-align: left; }
-th { background: var(--azul); color: #fff; font-weight: 500; }
-.aviso { background: #fff7e8; border: 1px solid #f0d9a8; border-radius: 6px; padding: 10px 12px; font-size: 0.88rem; margin-top: 12px; }
-.rolagem { overflow-x: auto; }
-footer { text-align: center; color: var(--suave); font-size: 0.85rem; padding: 0 24px 32px; }
-.oculto { display: none; }
-@media (max-width: 520px) { .grade { grid-template-columns: 1fr; } main { padding: 12px; } }
+.resumo { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; padding: 12px 14px; border-radius: 8px; background: var(--fundo); border: 1px solid var(--linha); }
+.resumo .chip { font-weight: 700; padding: 4px 12px; border-radius: 14px; color: #fff; font-size: 0.9rem; }
+.chip.bom { background: var(--verde); }
+.chip.atencao { background: #d49a00; }
+.chip.ruim { background: var(--erro); }
 </style>
 </head>
 <body>
 <header>
   <h1>DataCore · Simulação CTI Global</h1>
-  <p>Carregue o Demonstrativo_Fecap_v3.csv. A análise roda no seu navegador e o arquivo não é enviado a nenhum servidor.</p>
+  <p>Análise de KPIs, Regressões e Riscos. O arquivo não é enviado a nenhum servidor.</p>
 </header>
 <main>
-  <section>
+  <section id="s-upload">
     <h2>1. Carregar dados</h2>
     <div class="upload">
       <input type="file" id="arquivo" accept=".csv,text/csv" disabled>
     </div>
     <progress id="progresso"></progress>
-    <div id="status">Preparando o ambiente Python...</div>
+    <div id="status">Preparando ambiente Python...</div>
+  </section>
+
+  <section id="s-mapeamento" class="oculto">
+    <h2>2. Mapear Contas</h2>
+    <p>Associe as contas encontradas no seu arquivo aos campos do sistema. Nomes equivalentes (como <em>Resultado Operacional</em> ↔ <em>EBIT</em>) são identificados automaticamente.</p>
+    <div id="resumo-mapeamento" class="resumo"></div>
+    <div id="lista-mapeamento"></div>
+
+    <div class="bloco-extras">
+      <h3>Campos Personalizados (Opcional)</h3>
+      <p>Adicione outras contas presentes no CSV ou crie indicadores calculados por fórmulas usando os campos existentes.</p>
+      <div id="lista-campos-extras"></div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px">
+        <button class="acao secundario" id="btn-adicionar-campo" type="button">+ Adicionar campo</button>
+      </div>
+    </div>
+
+    <div class="acoes-mapeamento">
+      <button class="acao secundario" id="btn-automapear" type="button">Auto-mapear novamente</button>
+      <button class="acao" id="btn-analisar" type="button">Confirmar e Analisar</button>
+    </div>
   </section>
 
   <div id="painel" class="oculto">
     <section>
-      <h2>2. Indicadores</h2>
+      <h2>3. Indicadores</h2>
       <div class="filtros">
         <label>Ano <select id="filtro-ano"></select></label>
-        <span id="aviso-ano12" class="oculto" style="color:var(--laranja);font-size:0.88rem">O Ano 12 é o encerramento da concessão e não é comparável aos demais.</span>
       </div>
       <div id="resumo-ano" class="resumo"></div>
       <div class="kpis" id="kpis"></div>
-      <div class="legenda">Critérios de cor: verde = saudável, amarelo = atenção, vermelho = problema. Os limites estão no topo do script (LIMITES) e podem ser ajustados com o professor e a CTI.</div>
     </section>
 
     <section>
-      <h2>3. Mapa de saúde: todos os anos de uma vez</h2>
-      <div class="rolagem"><table id="t-mapa" class="mapa"></table></div>
-      <div class="legenda">Passe o mouse sobre uma célula para ver o motivo. Ano 12 é encerramento de concessão e não é comparável aos demais.</div>
+      <h2>4. Mapa de saúde: todos os anos</h2>
+      <div style="overflow-x:auto"><table id="t-mapa"></table></div>
     </section>
 
     <section>
-      <h2>4. O que os dados dizem</h2>
+      <h2>5. O que os dados dizem</h2>
       <div id="achados"></div>
       <button class="acao" id="baixar-relatorio">Baixar conclusões (.md)</button>
     </section>
 
     <section>
-      <h2>5. Lucro versus caixa</h2>
+      <h2>6. Lucro versus caixa</h2>
       <div class="grade">
         <div id="g-evolucao" class="grafico"></div>
         <div id="g-conversao" class="grafico"></div>
@@ -142,7 +164,7 @@ footer { text-align: center; color: var(--suave); font-size: 0.85rem; padding: 0
     </section>
 
     <section>
-      <h2>6. Distribuição entre os cenários</h2>
+      <h2>7. Distribuição entre os cenários</h2>
       <div class="filtros">
         <label>Conta <select id="filtro-conta"></select></label>
         <label>Ano do histograma <select id="filtro-ano-hist"></select></label>
@@ -151,286 +173,642 @@ footer { text-align: center; color: var(--suave); font-size: 0.85rem; padding: 0
         <div id="g-hist" class="grafico"></div>
         <div id="g-box" class="grafico"></div>
       </div>
-      <div class="rolagem" style="margin-top:16px"><table id="t-descritivas"></table></div>
+      <div style="overflow-x:auto; margin-top:16px"><table id="t-descritivas"></table></div>
     </section>
 
     <section>
-      <h2>7. Regressão: o que explica a Geração de Caixa</h2>
+      <h2>8. Regressões: Determinantes da Geração de Caixa</h2>
       <div class="grade">
         <div id="g-r2" class="grafico"></div>
         <div id="g-coef" class="grafico"></div>
       </div>
-      <div class="rolagem" style="margin-top:16px"><table id="t-agrupado"></table></div>
-      <div class="rolagem" style="margin-top:16px"><table id="t-ano12"></table></div>
-      <div class="aviso">
-        Valores em R$ milhões. Os coeficientes descrevem associações nos dados simulados, não causas. Nesta versão os erros-padrão são os do MQO simples; a versão com erros robustos (HC3) e agrupados por cenário entra na próxima etapa.
-      </div>
+      <div style="overflow-x:auto; margin-top:16px"><table id="t-agrupado"></table></div>
     </section>
   </div>
 </main>
-<footer>Protótipo · Projeto Interdisciplinar FECAP · Dados simulados (Monte Carlo)</footer>
 
 <script>
 const PYODIDE_URL = 'https://cdn.jsdelivr.net/pyodide/v0.26.4/full/';
 const ROTULOS = {
-  receita: 'Receita',
-  ebitda: 'EBITDA (recalculado)',
-  lucro_liquido: 'Resultado líquido',
-  caixa: 'Geração de caixa',
-  dist: 'Distribuição ao acionista',
-  saldo_final: 'Saldo final',
-  capex: 'CAPEX',
-  despfin: 'Despesas financeiras'
+  receita: 'Receita', ebitda: 'EBITDA (recalculado)', lucro_liquido: 'Resultado líquido',
+  caixa: 'Geração de caixa', dist: 'Distribuição ao acionista', saldo_final: 'Saldo final',
+  capex: 'CAPEX', despfin: 'Despesas financeiras'
 };
-const LIMITES = {
-  conversaoBoa: 0.5,
-  quedaForte: -0.05,
-  quedaMargemPp: -0.01,
-  riscoCaixaAlto: 0.2,
-  riscoCaixaMedio: 0.05
-};
+const LIMITES = { conversaoBoa: 0.5, quedaForte: -0.05, quedaMargemPp: -0.01, riscoCaixaAlto: 0.2, riscoCaixaMedio: 0.05 };
 const CORES = { azul: '#1f3864', laranja: '#c55a11', cinza: '#7f7f7f', verde: '#2f7d4f' };
+const ROTULO_STATUS = { bom: 'OK', atencao: 'ATENÇÃO', ruim: 'PROBLEMA', neutro: 'SEM BASE' };
+
+const CONTAS_SISTEMA = [
+  {
+    id: 'receita', nome: 'Receita', obrigatoria: true,
+    sinonimos: [
+      'DRE - Receita', 'Receita Líquida', 'Receita Operacional Líquida',
+      'Receita Bruta', 'Receita Operacional Bruta', 'Receita Operacional',
+      'Receita de Vendas', 'Faturamento', 'Faturamento Bruto', 'Faturamento Líquido',
+      'Vendas Totais', 'Vendas Líquidas', 'Vendas Brutas', 'Vendas',
+      'Total Revenue', 'Net Revenue', 'Gross Revenue', 'Operating Revenue',
+      'Revenue', 'Net Sales', 'Gross Sales', 'Sales', 'Receita', 'FLU - Receita'
+    ],
+    exclusoes: ['financeir', 'diferid', 'a receber']
+  },
+  {
+    id: 'lucro_liquido', nome: 'Resultado Líquido', obrigatoria: true,
+    sinonimos: [
+      'DRE - Resultado Líquido', 'Resultado Líquido do Exercício',
+      'Resultado Líquido', 'Lucro Líquido', 'Lucro Líquido do Exercício',
+      'Lucro/Prejuízo Líquido', 'Resultado Final', 'Lucro do Período',
+      'Resultado do Exercício', 'Net Income', 'Net Profit', 'Net Earnings',
+      'Profit After Tax', 'Bottom Line', 'DRE - Resultado Líquido após Equivalência'
+    ],
+    exclusoes: ['acumulad', 'operacional', 'financeir', 'antes do imposto', 'retencao']
+  },
+  {
+    id: 'resultado_operacional', nome: 'Resultado Operacional (EBIT)', obrigatoria: true,
+    sinonimos: [
+      'DRE - Resultado Operacional', 'Resultado Operacional (EBIT)',
+      'Resultado Operacional', 'EBIT', 'Lucro Operacional', 'LAJIR',
+      'Operating Income', 'Operating Profit', 'Operating Result',
+      'Earnings Before Interest and Taxes',
+      'Lucro Antes dos Juros e Impostos', 'Resultado Antes dos Juros e Impostos'
+    ],
+    exclusoes: ['outros resultados', 'liquido', 'financeir', 'ebitda', 'lajida', 'debito']
+  },
+  {
+    id: 'dep_amort', nome: 'Depreciação e Amortização', obrigatoria: true,
+    sinonimos: [
+      'DRE - Depreciação e Amortização', 'Depreciação e Amortização',
+      'D&A', 'D & A', 'Depreciação & Amortização',
+      'Depreciation and Amortization', 'Depreciation & Amortization',
+      'Depreciação', 'Depreciation', 'Amortização', 'Amortization',
+      'Encargos de Depreciação e Amortização'
+    ],
+    exclusoes: ['acumulad', 'intangivel', 'ebitda', 'lajida', 'bal -', 'bal  -']
+  },
+  {
+    id: 'ebitda_arquivo', nome: 'EBITDA (Original)', obrigatoria: false,
+    sinonimos: [
+      'DRE - EBITDA', 'EBITDA (Original)', 'EBITDA', 'EBITDA Reportado',
+      'EBITDA Ajustado', 'LAJIDA',
+      'Earnings Before Interest, Taxes, Depreciation and Amortization',
+      'Lucro Antes de Juros, Impostos, Depreciação e Amortização'
+    ],
+    exclusoes: []
+  },
+  {
+    id: 'caixa', nome: 'Geração de Caixa', obrigatoria: true,
+    sinonimos: [
+      'FLU - Geração de Caixa', 'Geração de Caixa', 'Fluxo de Caixa',
+      'Fluxo de Caixa Livre', 'Fluxo de Caixa Operacional', 'Geração de Caixa Livre',
+      'Geração Operacional de Caixa', 'Cash Flow', 'Free Cash Flow',
+      'Operating Cash Flow', 'Net Cash Flow', 'FCO', 'FCL', 'FCF',
+      'Variação de Caixa'
+    ],
+    exclusoes: ['saldo', 'caixa final', 'ending cash']
+  },
+  {
+    id: 'capex', nome: 'Investimentos (CAPEX)', obrigatoria: true,
+    sinonimos: [
+      'FLU - Investimentos', 'Investimentos (CAPEX)', 'CAPEX',
+      'Capital Expenditures', 'Capital Expenditure', 'Investimentos',
+      'Compras de Ativo', 'Aquisição de Imobilizado', 'Investimento em Ativo Fixo',
+      'Despesas de Capital', 'Adições ao Imobilizado'
+    ],
+    exclusoes: ['bal -', 'bal  -']
+  },
+  {
+    id: 'despfin', nome: 'Despesas Financeiras', obrigatoria: true,
+    sinonimos: [
+      'FLU - Despesas Financeiras', 'DRE - Despesas Financeiras',
+      'Despesas Financeiras', 'Despesa Financeira', 'Juros', 'Despesas com Juros',
+      'Juros Pagos', 'Encargos Financeiros', 'Custo Financeiro',
+      'Interest', 'Interest Expense', 'Interest Paid', 'Finance Cost',
+      'Finance Costs', 'Financial Expenses'
+    ],
+    exclusoes: ['receita', 'resultado financeiro']
+  },
+  {
+    id: 'dist', nome: 'Distribuição para Acionista', obrigatoria: true,
+    sinonimos: [
+      'FLU - Distribuição para Acionista', 'Distribuição para Acionista',
+      'Distribuição aos Acionistas', 'Distribuição de Lucros', 'Distribuição',
+      'Dividendos', 'Dividendos Pagos', 'Dividends', 'Dividends Paid',
+      'Payout', 'JCP', 'Juros sobre Capital Próprio', 'Proventos',
+      'Remuneração aos Acionistas'
+    ],
+    exclusoes: ['retencao']
+  },
+  {
+    id: 'saldo_final', nome: 'Saldo Final de Caixa', obrigatoria: true,
+    sinonimos: [
+      'FLU - Saldo Final', 'Saldo Final de Caixa', 'Saldo Final',
+      'Saldo de Caixa', 'Caixa Final', 'Ending Cash', 'Ending Cash Balance',
+      'Closing Cash', 'Disponibilidades Finais', 'Caixa e Equivalentes Final'
+    ],
+    exclusoes: ['inicial', 'opening']
+  }
+];
+
 const $ = id => document.getElementById(id);
+let pyodide, analise, resultado, riscos = {}, textoAchados = '', contasArquivo = [], sugestaoAuto = {};
+let camposPersonalizados = [], contadorExtras = 0;
 
-let pyodide = null;
-let analise = null;
-let resultado = null;
+const VARIAVEIS_FORMULA_BASE = [
+  'receita', 'ebitda', 'lucro_liquido', 'resultado_operacional',
+  'dep_amort', 'caixa', 'capex', 'despfin', 'dist', 'saldo_final'
+];
+const OPERADORES_FORMULA = ['+', '-', '*', '/', '(', ')', 'abs()'];
 
-function status(texto, tipo) {
-  const el = $('status');
-  el.textContent = texto;
-  el.className = tipo || '';
+function status(txt, tipo) { const el = $('status'); el.textContent = txt; el.className = tipo || ''; }
+function carregando(ativo) { $('progresso').style.display = ativo ? 'block' : 'none'; }
+function fmt(v, c) { return v === null || v === undefined ? 'n/d' : v.toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c }); }
+
+function normalizarTexto(txt) {
+  return String(txt || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
-function carregando(ativo) {
-  $('progresso').style.display = ativo ? 'block' : 'none';
+function limparPrefixoConta(txtNorm) {
+  return txtNorm.replace(/^(dre|flu|bal)\s*-\s*/, '').trim();
 }
 
-function proximoQuadro() {
-  return new Promise(resolve => setTimeout(resolve, 60));
+function escaparRegex(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function fmt(valor, casas) {
-  if (valor === null || valor === undefined) return 'n/d';
-  return valor.toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+function pontuarConta(campo, contaCsv) {
+  const cNorm = normalizarTexto(contaCsv);
+  if (!cNorm) return 0;
+  for (const ex of (campo.exclusoes || [])) {
+    if (cNorm.includes(ex)) return 0;
+  }
+  const cLimpo = limparPrefixoConta(cNorm);
+  let melhor = 0;
+  (campo.sinonimos || []).forEach((sinonimo, indice) => {
+    const sNorm = normalizarTexto(sinonimo);
+    const sLimpo = limparPrefixoConta(sNorm);
+    const penalidade = indice * 2;
+    if (cNorm === sNorm) {
+      melhor = Math.max(melhor, 1000 - penalidade);
+    } else if (cLimpo === sNorm || cLimpo === sLimpo) {
+      melhor = Math.max(melhor, 850 - penalidade);
+    } else if (sLimpo.length <= 4) {
+      const re = new RegExp('(?:^|[\\s(\\ -/])' + escaparRegex(sLimpo) + '(?:$|[\\s)\\ -/])');
+      if (re.test(cLimpo)) melhor = Math.max(melhor, 650 - penalidade);
+    } else if (cLimpo.includes(sLimpo) || (cLimpo.length >= 4 && sLimpo.includes(cLimpo))) {
+      melhor = Math.max(melhor, 600 - penalidade);
+    }
+  });
+  return melhor;
 }
 
-function pct(valor, casas) {
-  if (valor === null || valor === undefined) return 'n/d';
-  return fmt(valor * 100, casas === undefined ? 1 : casas) + '%';
+function autoMapearContasJS(contas) {
+  const candidatos = [];
+  CONTAS_SISTEMA.forEach(campo => {
+    contas.forEach(conta => {
+      const pontos = pontuarConta(campo, conta);
+      if (pontos > 0) candidatos.push({ pontos, id: campo.id, conta });
+    });
+  });
+  candidatos.sort((a, b) => b.pontos - a.pontos);
+  const mapeado = {};
+  const usadas = new Set();
+  candidatos.forEach(item => {
+    if (!mapeado[item.id] && !usadas.has(item.conta)) {
+      mapeado[item.id] = item.conta;
+      usadas.add(item.conta);
+    }
+  });
+  return mapeado;
 }
 
-async function iniciarPython() {
+function obterMapeamentoAutomatico(contas) {
+  if (analise && typeof analise.sugerir_mapeamento === 'function') {
+    try {
+      return JSON.parse(analise.sugerir_mapeamento(JSON.stringify(contas)));
+    } catch (_) {}
+  }
+  return autoMapearContasJS(contas);
+}
+
+async function iniciar() {
   try {
-    carregando(true);
-    status('Baixando o Python do navegador (só na primeira vez, cerca de 20 segundos)...');
+    carregando(true); status('Carregando Python...');
     pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
     await pyodide.loadPackage(['numpy', 'pandas']);
     const codigo = await (await fetch('python/analise.py')).text();
-    pyodide.FS.writeFile('/home/pyodide/analise.py', codigo);
-    pyodide.runPython("import sys\nif '/home/pyodide' not in sys.path:\n    sys.path.insert(0, '/home/pyodide')");
+    pyodide.FS.writeFile('/tmp/analise.py', codigo);
+    pyodide.runPython("import sys; sys.path.insert(0, '/tmp')");
     analise = pyodide.pyimport('analise');
-    $('arquivo').disabled = false;
-    status('Pronto. Escolha o arquivo CSV.', 'ok');
-  } catch (erro) {
-    status('Não foi possível iniciar o Python: ' + erro.message, 'erro');
-  } finally {
-    carregando(false);
-  }
+    $('arquivo').disabled = false; status('Pronto.', 'ok');
+  } catch (e) { status('Erro: ' + e.message, 'erro'); }
+  finally { carregando(false); }
 }
 
-async function processarArquivo(arquivo) {
-  try {
-    carregando(true);
-    $('painel').classList.add('oculto');
-    status('Lendo o arquivo (' + (arquivo.size / 1e6).toFixed(1) + ' MB)...');
-    await proximoQuadro();
-    const buffer = new Uint8Array(await arquivo.arrayBuffer());
-    pyodide.FS.writeFile('/tmp/dados.csv', buffer);
-    status('Processando no Python. Com o arquivo completo isso pode levar até um minuto e a página fica parada...');
-    await proximoQuadro();
-    const inicio = performance.now();
-    const texto = analise.processar('/tmp/dados.csv');
-    resultado = JSON.parse(texto);
-    const segundos = ((performance.now() - inicio) / 1000).toFixed(1);
-    const r = resultado.resumo;
-    status(
-      'Concluído em ' + segundos + ' s: ' + fmt(r.linhas_lidas, 0) + ' linhas, ' + fmt(r.cenarios, 0) +
-      ' cenários, ' + r.anos.length + ' anos (codificação ' + r.encoding + ').',
-      'ok'
-    );
-    $('painel').classList.remove('oculto');
-    await proximoQuadro();
-    montarPainel();
-  } catch (erro) {
-    const mensagem = String(erro.message || erro).split('\n').filter(Boolean).pop();
-    status('Erro ao processar: ' + mensagem, 'erro');
-  } finally {
-    carregando(false);
-  }
-}
+$('arquivo').onchange = async e => {
+  const arquivo = e.target.files[0]; if (!arquivo) return;
+  carregando(true); status('Lendo arquivo e mapeando contas automaticamente...');
+  const buffer = new Uint8Array(await arquivo.arrayBuffer());
+  pyodide.FS.writeFile('/tmp/dados.csv', buffer);
+  contasArquivo = analise.listar_contas_arquivo('/tmp/dados.csv').toJs();
+  exibirMapeamento(contasArquivo);
+  carregando(false);
+};
 
-function preencherSelect(el, opcoes, valorInicial) {
-  el.innerHTML = '';
-  opcoes.forEach(op => {
-    const o = document.createElement('option');
-    o.value = op.valor;
-    o.textContent = op.texto;
-    el.appendChild(o);
+function atualizarStatusMapeamento() {
+  let totalMapeados = 0, obrigatoriasFaltando = 0;
+  CONTAS_SISTEMA.forEach(s => {
+    const seletor = $(`mapa-${s.id}`);
+    const linha = $(`linha-${s.id}`);
+    const etiqueta = $(`etiqueta-${s.id}`);
+    if (!seletor || !linha || !etiqueta) return;
+    const valor = seletor.value;
+    if (valor) {
+      totalMapeados++;
+      linha.className = 'linha-mapa mapeado';
+      const ehAuto = sugestaoAuto[s.id] === valor;
+      etiqueta.className = 'etiqueta-mapa ' + (ehAuto ? 'auto' : 'manual');
+      etiqueta.textContent = ehAuto ? 'Auto-mapeado' : 'Manual';
+    } else if (s.obrigatoria) {
+      obrigatoriasFaltando++;
+      linha.className = 'linha-mapa pendente';
+      etiqueta.className = 'etiqueta-mapa pendente';
+      etiqueta.textContent = 'Obrigatório';
+    } else {
+      linha.className = 'linha-mapa opcional';
+      etiqueta.className = 'etiqueta-mapa opcional';
+      etiqueta.textContent = 'Opcional';
+    }
   });
-  if (valorInicial !== undefined) el.value = valorInicial;
+  const resumo = $('resumo-mapeamento');
+  if (obrigatoriasFaltando === 0) {
+    resumo.innerHTML = `<span class="chip bom">Pronto</span> <span><strong>${totalMapeados} de ${CONTAS_SISTEMA.length}</strong> campos mapeados automaticamente. Confira ou clique em <em>Confirmar e Analisar</em>.</span>`;
+    status('Contas mapeadas automaticamente.', 'ok');
+  } else {
+    resumo.innerHTML = `<span class="chip atencao">${obrigatoriasFaltando} pendente(s)</span> <span><strong>${totalMapeados} de ${CONTAS_SISTEMA.length}</strong> campos mapeados. Selecione manualmente os campos obrigatórios restantes.</span>`;
+    status(`Atenção: ${obrigatoriasFaltando} campo(s) obrigatório(s) aguardando seleção manual.`, '');
+  }
 }
 
-function montarPainel() {
-  const anos = resultado.resumo.anos;
-  const opcoesAno = anos.map(a => ({ valor: a, texto: 'Ano ' + a }));
-  const ultimoRegular = anos.filter(a => a <= 11).pop() || anos[anos.length - 1];
-  preencherSelect($('filtro-ano'), opcoesAno, ultimoRegular);
-  preencherSelect($('filtro-ano-hist'), opcoesAno, anos[anos.length - 1]);
-  preencherSelect(
-    $('filtro-conta'),
-    ['caixa', 'receita', 'ebitda', 'lucro_liquido', 'dist', 'saldo_final'].map(c => ({ valor: c, texto: ROTULOS[c] })),
-    'caixa'
-  );
-  calcularRiscos();
-  desenharKpis();
-  desenharMapa();
-  desenharAchados();
-  desenharEvolucao();
-  desenharConversao();
-  desenharDistribuicao();
-  desenharTabelaDescritivas();
-  desenharRegressoes();
+function aplicarAutoMapeamento() {
+  sugestaoAuto = obterMapeamentoAutomatico(contasArquivo);
+  CONTAS_SISTEMA.forEach(s => {
+    const seletor = $(`mapa-${s.id}`);
+    if (seletor) seletor.value = sugestaoAuto[s.id] || '';
+  });
+  atualizarStatusMapeamento();
 }
 
-function linhaDoAno(ano) {
-  return resultado.por_ano.find(l => l.ano === Number(ano));
+function exibirMapeamento(contas) {
+  $('s-mapeamento').classList.remove('oculto');
+  $('painel').classList.add('oculto');
+  const conteiner = $('lista-mapeamento'); conteiner.innerHTML = '';
+  CONTAS_SISTEMA.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'linha-mapa';
+    div.id = `linha-${s.id}`;
+    div.innerHTML = `<label for="mapa-${s.id}"><span>${s.nome}${s.obrigatoria ? ' *' : ''}</span><span id="etiqueta-${s.id}" class="etiqueta-mapa"></span></label><select id="mapa-${s.id}"><option value="">-- Ignorar --</option></select>`;
+    const seletor = div.querySelector('select');
+    contas.forEach(c => {
+      const opcao = document.createElement('option');
+      opcao.value = c; opcao.textContent = c;
+      seletor.appendChild(opcao);
+    });
+    seletor.onchange = atualizarStatusMapeamento;
+    conteiner.appendChild(div);
+  });
+  aplicarAutoMapeamento();
+  renderizarCamposExtras();
 }
 
-let riscos = {};
+function gerarIdentificadorCampo(nome, indicePadrao) {
+  const base = normalizarTexto(nome).replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  if (!base || /^\d/.test(base) || VARIAVEIS_FORMULA_BASE.includes(base) || ['n', 'cen', 'ebitda_arquivo'].includes(base)) {
+    return base ? `campo_${base}` : `campo_extra_${indicePadrao}`;
+  }
+  return base;
+}
+
+function obterVariaveisDisponiveis(indiceAtual) {
+  const vars = [...VARIAVEIS_FORMULA_BASE];
+  camposPersonalizados.forEach((c, idx) => {
+    if (idx < indiceAtual && c.id && !vars.includes(c.id)) vars.push(c.id);
+  });
+  return vars;
+}
+
+function adicionarCampoExtra(tipoInicial = 'simples') {
+  contadorExtras++;
+  camposPersonalizados.push({
+    uid: contadorExtras,
+    id: `campo_extra_${contadorExtras}`,
+    nome: '',
+    tipo: tipoInicial,
+    conta_csv: '',
+    dividir_milhao: true,
+    formula: ''
+  });
+  renderizarCamposExtras();
+}
+
+function removerCampoExtra(uid) {
+  camposPersonalizados = camposPersonalizados.filter(c => c.uid !== uid);
+  renderizarCamposExtras();
+}
+
+function inserirNaFormula(uid, token) {
+  const item = camposPersonalizados.find(c => c.uid === uid);
+  const input = $(`extra-formula-${uid}`);
+  if (!item || !input) return;
+  const inicio = input.selectionStart ?? input.value.length;
+  const fim = input.selectionEnd ?? input.value.length;
+  const antes = input.value.slice(0, inicio);
+  const depois = input.value.slice(fim);
+  const espacoAntes = antes.length > 0 && !/[\s(]$/.test(antes) ? ' ' : '';
+  const espacoDepois = depois.length > 0 && !/^[\s)]/.test(depois) ? ' ' : '';
+  const insercao = token === 'abs()' ? 'abs()' : `${espacoAntes}${token}${espacoDepois}`;
+  input.value = antes + insercao + depois;
+  item.formula = input.value;
+  input.focus();
+  const novaPos = inicio + (token === 'abs()' ? 4 : insercao.length);
+  input.setSelectionRange(novaPos, novaPos);
+}
+
+function renderizarCamposExtras() {
+  const conteiner = $('lista-campos-extras');
+  if (!conteiner) return;
+  conteiner.innerHTML = '';
+
+  camposPersonalizados.forEach((item, idx) => {
+    const cartao = document.createElement('div');
+    cartao.className = 'cartao-extra';
+
+    const opcoesContas = [`<option value="">-- Selecione uma conta do CSV --</option>`]
+      .concat(contasArquivo.map(c => `<option value="${c.replace(/"/g, '&quot;')}" ${item.conta_csv === c ? 'selected' : ''}>${c}</option>`))
+      .join('');
+
+    const variaveisDisp = obterVariaveisDisponiveis(idx);
+    const botoesVars = variaveisDisp.map(v =>
+      `<button type="button" class="chip-var" data-uid="${item.uid}" data-token="${v}" title="Inserir variável ${v}">${v}</button>`
+    ).join('');
+    const botoesOps = OPERADORES_FORMULA.map(op =>
+      `<button type="button" class="chip-var" data-uid="${item.uid}" data-token="${op}" title="Inserir ${op}">${op}</button>`
+    ).join('');
+
+    cartao.innerHTML = `
+      <div class="cabecalho-extra">
+        <div>
+          <strong>Campo personalizado #${idx + 1}</strong>
+          <span class="codigo-id" id="extra-id-badge-${item.uid}" title="Identificador para uso em fórmulas">${item.id}</span>
+        </div>
+        <button type="button" class="acao perigo" data-remover="${item.uid}">Remover</button>
+      </div>
+      <div class="grade-extra">
+        <div class="campo-form">
+          <label for="extra-tipo-${item.uid}">Tipo de campo</label>
+          <select id="extra-tipo-${item.uid}">
+            <option value="simples" ${item.tipo === 'simples' ? 'selected' : ''}>Campo simples (conta do CSV)</option>
+            <option value="formula" ${item.tipo === 'formula' ? 'selected' : ''}>Campo personalizado com fórmula</option>
+          </select>
+        </div>
+        <div class="campo-form">
+          <label for="extra-nome-${item.uid}">Nome de exibição</label>
+          <input type="text" id="extra-nome-${item.uid}" placeholder="${item.tipo === 'simples' ? 'Ex: Tributos, Ativo Total' : 'Ex: Margem Líquida, Fluxo Livre'}" value="${item.nome.replace(/"/g, '&quot;')}">
+        </div>
+        ${item.tipo === 'simples' ? `
+          <div class="campo-form">
+            <label for="extra-conta-${item.uid}">Conta correspondente no CSV</label>
+            <select id="extra-conta-${item.uid}">${opcoesContas}</select>
+            <label class="opcoes-escala">
+              <input type="checkbox" id="extra-milhao-${item.uid}" ${item.dividir_milhao ? 'checked' : ''}>
+              Converter para R$ milhões (dividir por 1.000.000)
+            </label>
+          </div>
+        ` : `
+          <div class="campo-form" style="grid-column: 1 / -1">
+            <label for="extra-formula-${item.uid}">Fórmula matemática</label>
+            <input type="text" id="extra-formula-${item.uid}" placeholder="Ex: lucro_liquido / receita   ou   ebitda - capex" value="${item.formula.replace(/"/g, '&quot;')}">
+            <div class="ajuda-formula">Clique nos campos ou operadores abaixo para inserir na fórmula:</div>
+            <div class="chips-variaveis">${botoesVars} ${botoesOps}</div>
+          </div>
+        `}
+      </div>
+    `;
+
+    conteiner.appendChild(cartao);
+
+    const selTipo = $(`extra-tipo-${item.uid}`);
+    const inpNome = $(`extra-nome-${item.uid}`);
+    const btnRemover = cartao.querySelector(`[data-remover="${item.uid}"]`);
+
+    selTipo.onchange = e => {
+      item.tipo = e.target.value;
+      renderizarCamposExtras();
+    };
+    inpNome.oninput = e => {
+      item.nome = e.target.value;
+      item.id = gerarIdentificadorCampo(item.nome, item.uid);
+      const badge = $(`extra-id-badge-${item.uid}`);
+      if (badge) badge.textContent = item.id;
+    };
+    btnRemover.onclick = () => removerCampoExtra(item.uid);
+
+    if (item.tipo === 'simples') {
+      const selConta = $(`extra-conta-${item.uid}`);
+      const chkMilhao = $(`extra-milhao-${item.uid}`);
+      selConta.onchange = e => {
+        item.conta_csv = e.target.value;
+        if (!item.nome && item.conta_csv) {
+          item.nome = item.conta_csv.replace(/^(DRE|FLU|BAL)\s*-\s*/i, '').trim();
+          item.id = gerarIdentificadorCampo(item.nome, item.uid);
+          inpNome.value = item.nome;
+          const badge = $(`extra-id-badge-${item.uid}`);
+          if (badge) badge.textContent = item.id;
+        }
+      };
+      chkMilhao.onchange = e => { item.dividir_milhao = e.target.checked; };
+    } else {
+      const inpFormula = $(`extra-formula-${item.uid}`);
+      inpFormula.oninput = e => { item.formula = e.target.value; };
+      cartao.querySelectorAll('.chip-var').forEach(btn => {
+        btn.onclick = () => inserirNaFormula(item.uid, btn.getAttribute('data-token'));
+      });
+    }
+  });
+}
+
+function coletarCamposExtrasValidados() {
+  const idsUsados = new Set(VARIAVEIS_FORMULA_BASE);
+  return camposPersonalizados.map((item, idx) => {
+    const nomeLimpo = (item.nome || '').trim();
+    if (!nomeLimpo) {
+      throw new Error(`Informe um nome para o Campo personalizado #${idx + 1}.`);
+    }
+    let idFinal = gerarIdentificadorCampo(nomeLimpo, item.uid);
+    while (idsUsados.has(idFinal)) {
+      idFinal = `${idFinal}_${item.uid}`;
+    }
+    idsUsados.add(idFinal);
+    item.id = idFinal;
+
+    if (item.tipo === 'simples') {
+      if (!item.conta_csv) {
+        throw new Error(`Selecione uma conta do CSV para o campo personalizado "${nomeLimpo}".`);
+      }
+      return {
+        id: idFinal,
+        nome: nomeLimpo,
+        tipo: 'simples',
+        conta_csv: item.conta_csv,
+        dividir_milhao: Boolean(item.dividir_milhao)
+      };
+    } else {
+      const formulaLimpa = (item.formula || '').trim();
+      if (!formulaLimpa) {
+        throw new Error(`Informe uma fórmula para o campo personalizado "${nomeLimpo}".`);
+      }
+      return {
+        id: idFinal,
+        nome: nomeLimpo,
+        tipo: 'formula',
+        formula: formulaLimpa,
+        dividir_milhao: false
+      };
+    }
+  });
+}
+
+$('btn-adicionar-campo').onclick = () => adicionarCampoExtra('simples');
+$('btn-automapear').onclick = () => aplicarAutoMapeamento();
+
+$('btn-analisar').onclick = async () => {
+  try {
+    carregando(true); status('Processando...');
+    const mapa = {};
+    CONTAS_SISTEMA.forEach(s => { const v = $(`mapa-${s.id}`).value; if (v) mapa[v] = s.id; });
+    const extrasValidados = coletarCamposExtrasValidados();
+    const resJson = analise.processar('/tmp/dados.csv', JSON.stringify(mapa), JSON.stringify(extrasValidados));
+    resultado = JSON.parse(resJson);
+    (resultado.campos_extras || []).forEach(c => { ROTULOS[c.id] = c.nome; });
+    calcularRiscos();
+    $('s-mapeamento').classList.add('oculto');
+    $('painel').classList.remove('oculto');
+    montarInterface();
+    status('Sucesso.', 'ok');
+  } catch (e) { status(e.message, 'erro'); }
+  finally { carregando(false); }
+};
 
 function calcularRiscos() {
-  const d = resultado.dados;
-  const cont = {};
+  const d = resultado.dados; const cont = {};
   for (let i = 0; i < d.n.length; i++) {
-    const n = d.n[i];
-    if (!cont[n]) cont[n] = { total: 0, caixaNeg: 0, saldoNeg: 0 };
-    cont[n].total++;
-    if (d.caixa[i] < 0) cont[n].caixaNeg++;
-    if (d.saldo_final[i] < 0) cont[n].saldoNeg++;
+    const n = d.n[i]; if (!cont[n]) cont[n] = { total: 0, caixaNeg: 0, saldoNeg: 0 };
+    cont[n].total++; if (d.caixa[i] < 0) cont[n].caixaNeg++; if (d.saldo_final[i] < 0) cont[n].saldoNeg++;
   }
   riscos = {};
-  Object.keys(cont).forEach(n => {
-    riscos[n] = { caixaNeg: cont[n].caixaNeg / cont[n].total, saldoNeg: cont[n].saldoNeg / cont[n].total };
-  });
-}
-
-function variacaoRel(ano, campo) {
-  const l = linhaDoAno(ano);
-  const a = linhaDoAno(Number(ano) - 1);
-  if (!a || !a[campo]) return null;
-  return l[campo] / a[campo] - 1;
-}
-
-function avaliarVariacao(ano, campo, nome) {
-  const v = variacaoRel(ano, campo);
-  if (v === null) return { status: 'neutro', motivo: 'Primeiro ano da série, sem comparação com ano anterior.' };
-  const txt = fmt(Math.abs(v) * 100, 1) + '%';
-  if (v >= 0) return { status: 'bom', motivo: nome + ' subiu ' + txt + ' em relação ao ano anterior.' };
-  if (v > LIMITES.quedaForte) return { status: 'atencao', motivo: nome + ' caiu ' + txt + ' em relação ao ano anterior.' };
-  return { status: 'ruim', motivo: nome + ' caiu ' + txt + ' em relação ao ano anterior, queda acima de ' + fmt(Math.abs(LIMITES.quedaForte) * 100, 0) + '%.' };
+  Object.keys(cont).forEach(n => { riscos[n] = { caixaNeg: cont[n].caixaNeg / cont[n].total, saldoNeg: cont[n].saldoNeg / cont[n].total }; });
 }
 
 function avaliar(ano) {
-  const l = linhaDoAno(ano);
+  const l = resultado.por_ano.find(x => x.ano === Number(ano));
   const r = riscos[ano];
-  const ant = linhaDoAno(Number(ano) - 1);
+  const ant = resultado.por_ano.find(x => x.ano === Number(ano) - 1);
   const itens = [];
 
-  const rec = avaliarVariacao(ano, 'receita', 'A receita');
-  itens.push(Object.assign({ id: 'receita', nome: 'Receita média', valor: 'R$ ' + fmt(l.receita, 0) + ' mi' }, rec));
+  const vRec = ant ? l.receita / ant.receita - 1 : null;
+  itens.push({ id: 'receita', nome: 'Receita média', valor: 'R$ ' + fmt(l.receita, 0) + ' mi', 
+               status: vRec === null ? 'neutro' : (vRec >= 0 ? 'bom' : 'ruim'),
+               motivo: vRec === null ? 'Sem comparação' : (vRec >= 0 ? 'Subiu ' : 'Caiu ') + Math.abs(vRec*100).toFixed(1) + '%' });
 
-  const ebi = avaliarVariacao(ano, 'ebitda', 'O EBITDA');
-  itens.push(Object.assign({ id: 'ebitda', nome: 'EBITDA médio (recalculado)', valor: 'R$ ' + fmt(l.ebitda, 0) + ' mi' }, ebi));
+  const vEbi = ant ? l.ebitda / ant.ebitda - 1 : null;
+  itens.push({ id: 'ebitda', nome: 'EBITDA médio', valor: 'R$ ' + fmt(l.ebitda, 0) + ' mi', 
+               status: vEbi === null ? 'neutro' : (vEbi >= 0 ? 'bom' : 'ruim'),
+               motivo: vEbi === null ? 'Sem comparação' : (vEbi >= 0 ? 'Subiu ' : 'Caiu ') + Math.abs(vEbi*100).toFixed(1) + '%' });
 
-  let mar;
-  if (!ant) {
-    mar = { status: 'neutro', motivo: 'Primeiro ano da série, sem comparação com ano anterior.' };
-  } else {
-    const dif = l.margem_ebitda - ant.margem_ebitda;
-    const txt = fmt(Math.abs(dif) * 100, 1) + ' p.p.';
-    if (dif >= 0) mar = { status: 'bom', motivo: 'A margem melhorou ' + txt + ': a empresa reteve mais EBITDA por real de receita.' };
-    else if (dif > LIMITES.quedaMargemPp) mar = { status: 'atencao', motivo: 'A margem recuou ' + txt + ', leve.' };
-    else mar = { status: 'ruim', motivo: 'A margem recuou ' + txt + ': os custos cresceram mais que a receita.' };
-  }
-  itens.push(Object.assign({ id: 'margem', nome: 'Margem EBITDA', valor: pct(l.margem_ebitda) }, mar));
+  itens.push({ id: 'caixa', nome: 'Geração de caixa', valor: 'R$ ' + fmt(l.caixa, 0) + ' mi', 
+               status: l.caixa > 0 ? (r.caixaNeg > 0.1 ? 'atencao' : 'bom') : 'ruim', 
+               motivo: l.caixa > 0 ? (r.caixaNeg > 0.1 ? 'Risco alto' : 'Saudável') : 'Média negativa' });
 
-  let cx;
-  if (l.caixa <= 0) cx = { status: 'ruim', motivo: 'Em média a empresa consumiu R$ ' + fmt(Math.abs(l.caixa), 0) + ' mi de caixa neste ano.' };
-  else if (r.caixaNeg > LIMITES.riscoCaixaAlto) cx = { status: 'atencao', motivo: 'A média é positiva, mas em ' + fmt(r.caixaNeg * 100, 0) + '% dos cenários o caixa do ano é negativo.' };
-  else cx = { status: 'bom', motivo: 'A empresa gerou caixa em média e na grande maioria dos cenários.' };
-  itens.push(Object.assign({ id: 'caixa', nome: 'Geração de caixa média', valor: 'R$ ' + fmt(l.caixa, 0) + ' mi' }, cx));
+  itens.push({ id: 'conversao', nome: 'Conversão', valor: fmt(l.conversao, 2), 
+               status: l.conversao > 0.5 ? 'bom' : 'atencao', 
+               motivo: l.conversao > 0.5 ? 'Conversão OK' : 'Conversão baixa' });
 
-  let cv;
-  if (l.lucro_liquido <= 0) cv = { status: 'neutro', motivo: 'Resultado líquido médio não positivo, índice não se aplica.' };
-  else if (l.conversao <= 0) cv = { status: 'ruim', motivo: 'Há lucro contábil de R$ ' + fmt(l.lucro_liquido, 0) + ' mi, mas o caixa saiu da empresa: o lucro não virou dinheiro.' };
-  else if (l.conversao < LIMITES.conversaoBoa) cv = { status: 'atencao', motivo: 'Só R$ ' + fmt(l.conversao, 2) + ' de cada R$ 1,00 de lucro virou caixa (mínimo desejado: ' + fmt(LIMITES.conversaoBoa, 2) + ').' };
-  else cv = { status: 'bom', motivo: 'O lucro está se convertendo em caixa em nível saudável.' };
-  itens.push(Object.assign({ id: 'conversao', nome: 'Conversão lucro em caixa', valor: fmt(l.conversao, 2) }, cv));
+  itens.push({ id: 'risco', nome: 'Risco de déficit', valor: (r.caixaNeg * 100).toFixed(1) + '%', 
+               status: r.caixaNeg < 0.05 ? 'bom' : (r.caixaNeg < 0.2 ? 'atencao' : 'ruim'), 
+               motivo: r.caixaNeg < 0.05 ? 'Baixo' : 'Alerta' });
 
-  let rk;
-  if (r.caixaNeg >= LIMITES.riscoCaixaAlto) rk = { status: 'ruim', motivo: 'Em ' + fmt(r.caixaNeg * 100, 0) + '% dos 1.200 cenários a geração de caixa do ano é negativa.' };
-  else if (r.caixaNeg >= LIMITES.riscoCaixaMedio) rk = { status: 'atencao', motivo: 'Em ' + fmt(r.caixaNeg * 100, 0) + '% dos cenários o caixa do ano é negativo.' };
-  else rk = { status: 'bom', motivo: 'Menos de ' + fmt(LIMITES.riscoCaixaMedio * 100, 0) + '% dos cenários têm caixa negativo.' };
-  itens.push(Object.assign({ id: 'risco', nome: 'Risco: cenários com caixa negativo', valor: fmt(r.caixaNeg * 100, 1) + '%' }, rk));
-
-  let sf;
-  if (l.saldo_final <= 0) sf = { status: 'ruim', motivo: 'O saldo final médio de caixa é negativo.' };
-  else if (r.saldoNeg > 0.001) sf = { status: 'atencao', motivo: 'O saldo médio é positivo, mas ' + fmt(r.saldoNeg * 100, 1) + '% dos cenários terminam o ano com saldo negativo.' };
-  else sf = { status: 'bom', motivo: 'Nenhum cenário termina o ano com saldo de caixa negativo.' };
-  itens.push(Object.assign({ id: 'saldo', nome: 'Saldo final médio', valor: 'R$ ' + fmt(l.saldo_final, 0) + ' mi' }, sf));
+  (resultado.campos_extras || []).forEach(extra => {
+    const valAtual = l[extra.id];
+    const valAnt = ant ? ant[extra.id] : null;
+    const variacao = (valAnt !== null && valAnt !== undefined && valAnt !== 0 && valAtual !== null && valAtual !== undefined)
+      ? (valAtual / Math.abs(valAnt) - (valAnt > 0 ? 1 : -1))
+      : null;
+    const textoValor = valAtual === null || valAtual === undefined
+      ? 'n/d'
+      : (extra.dividir_milhao ? 'R$ ' + fmt(valAtual, 1) + ' mi' : fmt(valAtual, 2));
+    itens.push({
+      id: extra.id,
+      nome: extra.nome,
+      valor: textoValor,
+      status: variacao === null ? 'neutro' : (variacao >= 0 ? 'bom' : 'atencao'),
+      motivo: variacao === null
+        ? (extra.tipo === 'formula' ? `Fórmula: ${extra.formula}` : 'Campo personalizado')
+        : (variacao >= 0 ? 'Subiu ' : 'Caiu ') + Math.abs(variacao * 100).toFixed(1) + '%'
+    });
+  });
 
   return itens;
 }
 
-const ROTULO_STATUS = { bom: 'OK', atencao: 'ATENÇÃO', ruim: 'PROBLEMA', neutro: 'SEM BASE' };
+function montarInterface() {
+  const anos = resultado.resumo.anos;
+  const selAno = $('filtro-ano'); selAno.innerHTML = '';
+  anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = 'Ano ' + a; selAno.appendChild(o); });
+  selAno.value = anos[anos.length - 1];
+  selAno.onchange = desenharKpis;
+  
+  const selC = $('filtro-conta'); selC.innerHTML = '';
+  const contasGrafico = ['caixa', 'receita', 'ebitda', 'lucro_liquido', 'dist', 'saldo_final']
+    .concat((resultado.campos_extras || []).map(c => c.id));
+  contasGrafico.forEach(c => {
+    const o = document.createElement('option'); o.value = c; o.textContent = ROTULOS[c] || c; selC.appendChild(o);
+  });
+  selC.onchange = desenharDistribuicao;
+  
+  const selAH = $('filtro-ano-hist'); selAH.innerHTML = '';
+  anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = 'Ano ' + a; selAH.appendChild(o); });
+  selAH.onchange = desenharDistribuicao;
+
+  desenharKpis(); desenharMapa(); desenharAchados(); desenharEvolucao(); desenharConversao(); desenharDistribuicao(); desenharRegressoes();
+}
 
 function desenharKpis() {
   const ano = $('filtro-ano').value;
-  $('aviso-ano12').classList.toggle('oculto', Number(ano) !== 12);
   const itens = avaliar(ano);
-  const contagem = { bom: 0, atencao: 0, ruim: 0 };
-  itens.forEach(i => { if (contagem[i.status] !== undefined) contagem[i.status]++; });
-  $('resumo-ano').innerHTML =
-    '<strong>Ano ' + ano + ':</strong>' +
-    '<span class="chip ruim">' + contagem.ruim + ' problema(s)</span>' +
-    '<span class="chip atencao">' + contagem.atencao + ' atenção</span>' +
-    '<span class="chip bom">' + contagem.bom + ' ok</span>';
-  $('kpis').innerHTML = itens.map(i =>
-    '<div class="kpi ' + i.status + '"><span class="selo ' + i.status + '">' + ROTULO_STATUS[i.status] + '</span>' +
-    '<div class="nome">' + i.nome + '</div><div class="valor">' + i.valor + '</div>' +
-    '<div class="motivo">' + i.motivo + '</div></div>'
-  ).join('');
+  const cont = { bom: 0, atencao: 0, ruim: 0 };
+  itens.forEach(i => { if(cont[i.status] !== undefined) cont[i.status]++; });
+  
+  $('resumo-ano').innerHTML = `<strong>Ano ${ano}:</strong> <span class="chip ruim">${cont.ruim} problemas</span> <span class="chip atencao">${cont.atencao} alertas</span> <span class="chip bom">${cont.bom} ok</span>`;
+  $('kpis').innerHTML = itens.map(i => `
+    <div class="kpi ${i.status}">
+      <span class="selo ${i.status}">${ROTULO_STATUS[i.status]}</span>
+      <div class="nome">${i.nome}</div><div class="valor">${i.valor}</div><div class="motivo">${i.motivo}</div>
+    </div>
+  `).join('');
 }
 
 function desenharMapa() {
   const anos = resultado.resumo.anos;
-  const ids = ['receita', 'ebitda', 'margem', 'caixa', 'conversao', 'risco', 'saldo'];
-  const porAno = {};
-  anos.forEach(a => { porAno[a] = avaliar(a); });
-  let html = '<tr><th>Indicador</th>' + anos.map(a => '<th>' + a + '</th>').join('') + '</tr>';
+  const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'];
+  const porAno = {}; anos.forEach(a => { porAno[a] = avaliar(a); });
+  let html = '<tr><th>Indicador</th>' + anos.map(a => `<th>${a}</th>`).join('') + '</tr>';
   ids.forEach(id => {
     const nome = porAno[anos[0]].find(i => i.id === id).nome;
-    html += '<tr><td>' + nome + '</td>' + anos.map(a => {
+    html += `<tr><td>${nome}</td>` + anos.map(a => {
       const it = porAno[a].find(i => i.id === id);
-      const simbolo = it.status === 'bom' ? '✓' : it.status === 'ruim' ? '✕' : it.status === 'atencao' ? '!' : '–';
-      return '<td class="c ' + it.status + '" title="Ano ' + a + ': ' + it.motivo.replace(/"/g, '&quot;') + '">' + simbolo + '</td>';
+      return `<td class="c ${it.status}" title="${it.motivo}">${it.status === 'bom' ? '✓' : (it.status === 'ruim' ? '✕' : '!')}</td>`;
     }).join('') + '</tr>';
   });
   $('t-mapa').innerHTML = html;
 }
-
-let textoAchados = '';
 
 function gerarAchados() {
   const t = resultado.por_ano;
@@ -439,8 +817,8 @@ function gerarAchados() {
 
   const anosCaixaNeg = regulares.filter(l => l.caixa <= 0).map(l => l.ano);
   const conversoes = regulares.filter(l => l.conversao !== null && l.lucro_liquido > 0);
-  const maxConv = conversoes.reduce((m, l) => (l.conversao > m.conversao ? l : m), conversoes[0]);
-  const mediaConv = conversoes.reduce((s, l) => s + l.conversao, 0) / conversoes.length;
+  const maxConv = conversoes.length ? conversoes.reduce((m, l) => (l.conversao > m.conversao ? l : m), conversoes[0]) : {ano: 'n/d', conversao: 0};
+  const mediaConv = conversoes.length ? conversoes.reduce((s, l) => s + l.conversao, 0) / conversoes.length : 0;
   const lucroTotal = regulares.reduce((s, l) => s + l.lucro_liquido, 0);
   const caixaTotal = regulares.reduce((s, l) => s + l.caixa, 0);
   const razao = lucroTotal > 0 ? caixaTotal / lucroTotal : null;
@@ -457,7 +835,7 @@ function gerarAchados() {
     achados.push({
       tipo: 'ruim',
       titulo: 'Anos em que a empresa consome caixa em média',
-      texto: 'Nos anos ' + anosCaixaNeg.join(', ') + ' a geração de caixa média é negativa, apesar de o EBITDA seguir positivo. Nesses anos é preciso ter reserva ou financiamento para fechar as contas.'
+      texto: 'Nos anos ' + anosCaixaNeg.join(', ') + ' a geração de caixa média é negativa. Nesses anos é preciso ter reserva ou financiamento para fechar as contas.'
     });
   }
 
@@ -466,7 +844,7 @@ function gerarAchados() {
     achados.push({
       tipo: riscos[piorRisco].caixaNeg >= LIMITES.riscoCaixaAlto ? 'ruim' : 'atencao',
       titulo: 'Ano de maior risco de caixa negativo',
-      texto: 'O Ano ' + piorRisco + ' tem caixa negativo em ' + fmt(riscos[piorRisco].caixaNeg * 100, 0) + '% dos 1.200 cenários simulados. Como os cenários vêm de uma simulação de Monte Carlo, esse percentual funciona como uma estimativa da probabilidade de aperto de caixa naquele ano.'
+      texto: 'O Ano ' + piorRisco + ' tem caixa negativo em ' + fmt(riscos[piorRisco].caixaNeg * 100, 0) + '% dos cenários simulados.'
     });
   }
 
@@ -477,25 +855,14 @@ function gerarAchados() {
     achados.push({
       tipo: 'info',
       titulo: explicaPouco ? 'EBITDA sozinho explica pouco do caixa' : 'EBITDA explica boa parte do caixa, mas não tudo',
-      texto: 'Considerando só o EBITDA, o R² dos anos 1 a 11 é ' + fmt(ag.r2_modelo1, 2) + ': ele explica cerca de ' + fmt(ag.r2_modelo1 * 100, 0) +
-        '% da variação do caixa. No modelo com CAPEX e despesas financeiras e efeito fixo de ano, o R² interno é ' + fmt(ag.r2_interno, 2) +
-        '. ' + (explicaPouco ? 'O EBITDA mede a operação, mas não enxerga investimentos nem juros, por isso é um mau substituto do caixa.' : 'Mesmo assim, investimentos e juros mudam o caixa de forma que o EBITDA não captura.')
+      texto: 'Considerando só o EBITDA, o R² dos anos 1 a 11 é ' + fmt(ag.r2_modelo1, 2) + '. No modelo completo, o R² interno é ' + fmt(ag.r2_interno, 2) + '.'
     });
     const efeito = v => (v >= 0 ? 'aumenta em R$ ' : 'reduz em R$ ') + fmt(Math.abs(v), 2);
     achados.push({
       tipo: 'info',
-      titulo: 'Quanto cada real de EBITDA, CAPEX e juros pesa no caixa',
-      texto: 'No modelo completo, cada R$ 1,00 a mais de EBITDA ' + efeito(c('ebitda')) + ' o caixa; cada R$ 1,00 a mais de CAPEX ' + efeito(c('capex')) +
-        '; e cada R$ 1,00 a mais de despesa financeira ' + efeito(c('despfin')) + '. São associações nos dados simulados, não relações causais.'
-    });
-  }
-
-  if (t[0] && t[0].divergencia_ebitda !== undefined) {
-    const med = regulares.reduce((s, l) => s + (l.divergencia_ebitda || 0), 0) / regulares.length;
-    achados.push({
-      tipo: med > 0.01 ? 'atencao' : 'bom',
-      titulo: 'EBITDA do arquivo versus EBITDA recalculado',
-      texto: 'A coluna DRE - EBITDA do arquivo difere em média ' + fmt(med * 100, 1) + '% do EBITDA recalculado (Resultado Operacional + Depreciação e Amortização). Este painel usa o recalculado. Vale confirmar com a CTI qual definição é a oficial.'
+      titulo: 'Pesos no caixa',
+      texto: 'Cada R$ 1,00 a mais de EBITDA ' + efeito(c('ebitda')) + ' o caixa; cada R$ 1,00 a mais de CAPEX ' + efeito(c('capex')) +
+        '; e cada R$ 1,00 a mais de despesa financeira ' + efeito(c('despfin')) + '.'
     });
   }
 
@@ -504,8 +871,7 @@ function gerarAchados() {
     achados.push({
       tipo: 'atencao',
       titulo: 'O Ano 12 não é comparável aos demais',
-      texto: 'O Ano 12 é o encerramento da concessão: contas de balanço deixam de existir e a distribuição ao acionista salta para R$ ' + fmt(ult.dist, 0) +
-        ' mi em média. Por isso ele é analisado em modelos separados e fica fora das médias dos anos 1 a 11.'
+      texto: 'O Ano 12 é o encerramento da concessão e possui dinâmicas financeiras diferentes dos anos anteriores.'
     });
   }
   return achados;
@@ -516,160 +882,60 @@ function desenharAchados() {
   $('achados').innerHTML = achados.map(a =>
     '<div class="achado ' + a.tipo + '"><h3>' + a.titulo + '</h3><p>' + a.texto + '</p></div>'
   ).join('');
-  textoAchados = '# Conclusões da análise da simulação CTI\n\n' +
-    achados.map(a => '## ' + a.titulo + '\n\n' + a.texto + '\n').join('\n') +
-    '\n---\nValores em R$ milhões. Gerado automaticamente a partir do arquivo carregado.\n';
+  textoAchados = '# Conclusões da análise\n\n' +
+    achados.map(a => '## ' + a.titulo + '\n\n' + a.texto + '\n').join('\n');
 }
 
-function baixarRelatorio() {
-  const blob = new Blob([textoAchados], { type: 'text/markdown;charset=utf-8' });
+$('baixar-relatorio').onclick = () => {
+  const blob = new Blob([textoAchados], { type: 'text/markdown' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = 'conclusoes_cti.md';
+  a.download = 'conclusoes.md';
   a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-const LAYOUT_BASE = {
-  margin: { t: 50, r: 20, b: 90, l: 70 },
-  paper_bgcolor: 'rgba(0,0,0,0)',
-  plot_bgcolor: 'rgba(0,0,0,0)',
-  font: { family: 'system-ui, sans-serif', size: 12, color: '#1b2430' },
-  legend: { orientation: 'h', x: 0, y: -0.25, xanchor: 'left' },
-  autosize: true
 };
-const CONFIG = { responsive: true, displaylogo: false };
-
-function layout(extra) {
-  return Object.assign({}, LAYOUT_BASE, extra);
-}
 
 function desenharEvolucao() {
   const t = resultado.por_ano;
-  const x = t.map(l => 'Ano ' + l.ano);
-  const serie = (campo, nome, cor) => ({ x, y: t.map(l => l[campo]), name: nome, mode: 'lines+markers', line: { color: cor } });
-  Plotly.newPlot('g-evolucao', [
-    serie('ebitda', ROTULOS.ebitda, CORES.azul),
-    serie('lucro_liquido', ROTULOS.lucro_liquido, CORES.verde),
-    serie('caixa', ROTULOS.caixa, CORES.laranja)
-  ], layout({ title: { text: 'Médias por ano (R$ milhões)', font: { size: 14 } } }), CONFIG);
+  const trace = (c, n, col) => ({ x: t.map(l => 'Ano ' + l.ano), y: t.map(l => l[c]), name: n, mode: 'lines+markers', line: { color: col } });
+  Plotly.newPlot('g-evolucao', [trace('ebitda', 'EBITDA', CORES.azul), trace('caixa', 'Caixa', CORES.laranja)], { title: 'Evolução (Médias)' });
 }
 
 function desenharConversao() {
   const t = resultado.por_ano;
-  Plotly.newPlot('g-conversao', [{
-    type: 'bar',
-    x: t.map(l => 'Ano ' + l.ano),
-    y: t.map(l => l.conversao),
-    marker: { color: t.map(l => (l.ano === 12 ? CORES.cinza : CORES.azul)) },
-    hovertemplate: '%{x}: %{y:.2f}<extra></extra>'
-  }], layout({
-    title: { text: 'Quanto do lucro líquido vira caixa', font: { size: 14 } },
-    yaxis: { title: 'Geração de caixa ÷ Resultado líquido' },
-    shapes: [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 1, y1: 1, line: { color: CORES.laranja, dash: 'dash' } }]
-  }), CONFIG);
+  Plotly.newPlot('g-conversao', [{ x: t.map(l => 'Ano ' + l.ano), y: t.map(l => l.conversao), type: 'bar', marker: { color: CORES.azul } }], { title: 'Conversão Lucro/Caixa' });
 }
 
 function desenharDistribuicao() {
   const conta = $('filtro-conta').value;
-  const anoHist = Number($('filtro-ano-hist').value);
+  const anoH = Number($('filtro-ano-hist').value);
+  const nomeConta = ROTULOS[conta] || conta;
   const d = resultado.dados;
-  const valoresAno = [];
-  const porAno = {};
-  for (let i = 0; i < d.n.length; i++) {
-    const n = d.n[i];
-    if (!porAno[n]) porAno[n] = [];
-    porAno[n].push(d[conta][i]);
-    if (n === anoHist) valoresAno.push(d[conta][i]);
+  const vals = []; const porA = {};
+  for(let i=0; i<d.n.length; i++) {
+    const v = d[conta] ? d[conta][i] : null;
+    if (v === null || v === undefined) continue;
+    if(!porA[d.n[i]]) porA[d.n[i]] = [];
+    porA[d.n[i]].push(v);
+    if(d.n[i] === anoH) vals.push(v);
   }
-  Plotly.newPlot('g-hist', [{
-    type: 'histogram', x: valoresAno, nbinsx: 40, marker: { color: CORES.azul }
-  }], layout({
-    title: { text: ROTULOS[conta] + ' no Ano ' + anoHist, font: { size: 14 } },
-    xaxis: { title: 'R$ milhões' }, yaxis: { title: 'Cenários' }
-  }), CONFIG);
-  const anos = Object.keys(porAno).map(Number).sort((a, b) => a - b);
-  Plotly.newPlot('g-box', anos.map(a => ({
-    type: 'box', y: porAno[a], name: String(a), boxpoints: 'outliers',
-    marker: { color: CORES.azul, size: 3 }, line: { width: 1 }
-  })), layout({
-    title: { text: ROTULOS[conta] + ' por ano', font: { size: 14 } },
-    yaxis: { title: 'R$ milhões' }, xaxis: { title: 'Ano' }, showlegend: false
-  }), CONFIG);
-}
-
-function desenharTabelaDescritivas() {
-  const linhas = resultado.descritivas.map(l =>
-    '<tr><td>' + ROTULOS[l.conta] + '</td><td>' + fmt(l.media, 1) + '</td><td>' + fmt(l.mediana, 1) +
-    '</td><td>' + fmt(l.desvio, 1) + '</td><td>' + fmt(l.minimo, 1) + '</td><td>' + fmt(l.maximo, 1) +
-    '</td><td>' + fmt(l.pct_outliers, 1) + '%</td></tr>'
-  ).join('');
-  $('t-descritivas').innerHTML =
-    '<tr><th>Conta (R$ milhões, todos os anos)</th><th>Média</th><th>Mediana</th><th>Desvio padrão</th><th>Mínimo</th><th>Máximo</th><th>Fora dos limites IQR</th></tr>' + linhas;
+  Plotly.newPlot('g-hist', [{ x: vals, type: 'histogram', marker: { color: CORES.azul } }], { title: `Distribuição nos Cenários — ${nomeConta} (Ano ${anoH})` });
+  Plotly.newPlot('g-box', Object.keys(porA).map(a => ({ y: porA[a], type: 'box', name: 'Ano ' + a })), { title: `Variabilidade por Ano — ${nomeConta}` });
+  
+  const desc = resultado.descritivas.map(l => `<tr><td>${ROTULOS[l.conta] || l.conta}</td><td>${fmt(l.media,1)}</td><td>${fmt(l.mediana,1)}</td><td>${fmt(l.desvio,1)}</td><td>${l.pct_outliers}%</td></tr>`).join('');
+  $('t-descritivas').innerHTML = `<tr><th>Conta</th><th>Média</th><th>Mediana</th><th>Desvio</th><th>Outliers</th></tr>${desc}`;
 }
 
 function desenharRegressoes() {
   const reg = resultado.regressoes;
-  const anos = reg.por_ano.map(l => 'Ano ' + l.ano);
-  Plotly.newPlot('g-r2', [
-    { type: 'bar', x: anos, y: reg.por_ano.map(l => l.r2_modelo1), name: 'Só EBITDA', marker: { color: CORES.cinza } },
-    { type: 'bar', x: anos, y: reg.por_ano.map(l => l.r2), name: 'EBITDA + CAPEX + desp. fin.', marker: { color: CORES.azul } }
-  ], layout({
-    title: { text: 'R² por ano', font: { size: 14 } }, barmode: 'group', yaxis: { range: [0, 1.05], title: 'R²' }
-  }), CONFIG);
-
-  const coef = nome => reg.por_ano.map(l => l.coeficientes.find(c => c.variavel === nome));
-  const barras = (nome, cor) => {
-    const itens = coef(nome);
-    return {
-      type: 'scatter', mode: 'markers', x: anos, y: itens.map(c => c.coef), name: ROTULOS[nome],
-      error_y: { type: 'data', array: itens.map(c => (c.erro_padrao === null ? 0 : 1.96 * c.erro_padrao)), visible: true },
-      marker: { color: cor, size: 8 }
-    };
-  };
-  Plotly.newPlot('g-coef', [barras('ebitda', CORES.azul)], layout({
-    title: { text: 'Coeficiente do EBITDA por ano (IC 95% aproximado)', font: { size: 14 } },
-    yaxis: { title: 'R$ de caixa por R$ 1 de EBITDA', zeroline: true }, showlegend: false
-  }), CONFIG);
-
-  const ag = reg.agrupado;
-  if (ag) {
-    const c = nome => ag.coeficientes.find(x => x.variavel === nome).coef;
-    $('t-agrupado').innerHTML =
-      '<tr><th>Todos os anos (1 a 11), com efeito fixo de ano</th><th>Valor</th></tr>' +
-      '<tr><td>Modelo 1 (só EBITDA): coeficiente</td><td>' + fmt(ag.coef_ebitda_modelo1, 3) + '</td></tr>' +
-      '<tr><td>Modelo 1 (só EBITDA): R²</td><td>' + fmt(ag.r2_modelo1, 3) + '</td></tr>' +
-      '<tr><td>Modelo 3: coeficiente do EBITDA</td><td>' + fmt(c('ebitda'), 3) + '</td></tr>' +
-      '<tr><td>Modelo 3: coeficiente do CAPEX</td><td>' + fmt(c('capex'), 3) + '</td></tr>' +
-      '<tr><td>Modelo 3: coeficiente das despesas financeiras</td><td>' + fmt(c('despfin'), 3) + '</td></tr>' +
-      '<tr><td>Modelo 3: R² interno (within)</td><td>' + fmt(ag.r2_interno, 3) + '</td></tr>' +
-      '<tr><td>Modelo 3: RMSE (R$ milhões)</td><td>' + fmt(ag.rmse, 1) + '</td></tr>' +
-      '<tr><td>Observações</td><td>' + fmt(ag.n, 0) + '</td></tr>';
-  } else {
-    $('t-agrupado').innerHTML = '';
-  }
-
-  if (reg.ano12.length) {
-    const linhas = reg.ano12.map(m =>
-      '<tr><td>' + m.modelo + '</td><td>' + fmt(m.r2, 3) + '</td><td>' +
-      m.coeficientes.map(c => ROTULOS[c.variavel] + ': ' + fmt(c.coef, 3)).join('<br>') + '</td></tr>'
-    ).join('');
-    $('t-ano12').innerHTML = '<tr><th>Ano 12 (modelos separados)</th><th>R²</th><th>Coeficientes</th></tr>' + linhas;
-  } else {
-    $('t-ano12').innerHTML = '';
+  Plotly.newPlot('g-r2', [{ x: reg.por_ano.map(l => 'Ano ' + l.ano), y: reg.por_ano.map(l => l.r2), type: 'bar', name: 'R²' }], { title: 'Qualidade do Modelo (R²)' });
+  
+  if (reg.agrupado) {
+    const c = reg.agrupado.coeficientes;
+    $('t-agrupado').innerHTML = `<tr><th>Coeficiente</th><th>Valor</th></tr>` + c.map(i => `<tr><td>${i.variavel}</td><td>${i.coef.toFixed(4)}</td></tr>`).join('');
   }
 }
 
-$('arquivo').addEventListener('change', e => {
-  const arquivo = e.target.files[0];
-  if (arquivo) processarArquivo(arquivo);
-});
-$('filtro-ano').addEventListener('change', desenharKpis);
-$('baixar-relatorio').addEventListener('click', baixarRelatorio);
-$('filtro-conta').addEventListener('change', desenharDistribuicao);
-$('filtro-ano-hist').addEventListener('change', desenharDistribuicao);
-
-iniciarPython();
+iniciar();
 </script>
 </body>
 </html>
