@@ -522,6 +522,7 @@ td { color: var(--texto); }
 .etiqueta-mapa { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
 .etiqueta-mapa.auto { background: var(--kpi-bom-bg); color: var(--verde); }
 .etiqueta-mapa.manual { background: var(--azul-suave); color: var(--azul); }
+.etiqueta-mapa.formula { background: rgba(99, 102, 241, 0.16); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.35); }
 .etiqueta-mapa.pendente { background: var(--kpi-ruim-bg); color: var(--erro); }
 .etiqueta-mapa.opcional { background: var(--kpi-atencao-bg); color: var(--laranja); }
 
@@ -595,7 +596,40 @@ button.acao.perigo:hover {
   width: 100%;
 }
 .opcoes-escala { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--texto); margin-top: 6px; }
-.ajuda-formula { margin-top: 8px; font-size: 0.8rem; color: var(--suave); }
+.barra-insercao-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+.seletor-variavel-bloco {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 260px;
+}
+.seletor-variavel-bloco select {
+  flex: 1;
+  font-size: 0.85rem;
+  padding: 6px 10px;
+  border: 1px solid var(--linha);
+  border-radius: 6px;
+  background: var(--painel);
+  color: var(--texto);
+}
+.operadores-formula {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+.label-ops {
+  font-size: 0.8rem;
+  color: var(--suave);
+  margin-right: 2px;
+}
 .chips-variaveis { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 .chip-var {
   font: inherit;
@@ -1685,6 +1719,50 @@ $('arquivo').onchange = async e => {
   carregando(false);
 };
 
+function normalizarIdentificadorConta(conta) {
+  if (!conta) return '';
+  let s = normalizarTexto(conta).replace(/^(dre|flu|bal)\s*[-:_]\s*/i, '');
+  s = s.replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+  return s;
+}
+
+function atualizarOpcoesSeletoresMapeamento() {
+  CONTAS_SISTEMA.forEach(s => {
+    const seletor = $(`mapa-${s.id}`);
+    if (!seletor) return;
+    const valorAtual = seletor.value;
+
+    let html = '<option value="">-- Ignorar --</option>';
+
+    if (contasArquivo && contasArquivo.length > 0) {
+      html += '<optgroup label="Contas do Arquivo CSV">';
+      contasArquivo.forEach(c => {
+        html += `<option value="${c.replace(/"/g, '&quot;')}">${c}</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    if (camposPersonalizados && camposPersonalizados.length > 0) {
+      html += '<optgroup label="Campos Personalizados / Fórmulas">';
+      camposPersonalizados.forEach(item => {
+        const idVal = `__custom__:${item.id}`;
+        const nomeExib = item.nome ? item.nome : item.id;
+        const tipoTxt = item.tipo === 'formula' ? 'Fórmula' : 'Simples';
+        html += `<option value="${idVal}">⚡ ${nomeExib} (${tipoTxt})</option>`;
+      });
+      html += '</optgroup>';
+    }
+
+    seletor.innerHTML = html;
+
+    if (valorAtual) {
+      seletor.value = valorAtual;
+    }
+  });
+
+  atualizarStatusMapeamento();
+}
+
 function atualizarStatusMapeamento() {
   let totalMapeados = 0, obrigatoriasFaltando = 0;
   CONTAS_SISTEMA.forEach(s => {
@@ -1696,9 +1774,17 @@ function atualizarStatusMapeamento() {
     if (valor) {
       totalMapeados++;
       linha.className = 'linha-mapa mapeado';
-      const ehAuto = sugestaoAuto[s.id] === valor;
-      etiqueta.className = 'etiqueta-mapa ' + (ehAuto ? 'auto' : 'manual');
-      etiqueta.textContent = ehAuto ? 'Auto-mapeado' : 'Manual';
+      if (valor.startsWith('__custom__:')) {
+        const idExt = valor.replace('__custom__:', '');
+        const campoExt = camposPersonalizados.find(c => c.id === idExt);
+        const tipoTxt = campoExt && campoExt.tipo === 'formula' ? 'Fórmula' : 'Personalizado';
+        etiqueta.className = 'etiqueta-mapa formula';
+        etiqueta.textContent = tipoTxt;
+      } else {
+        const ehAuto = sugestaoAuto[s.id] === valor;
+        etiqueta.className = 'etiqueta-mapa ' + (ehAuto ? 'auto' : 'manual');
+        etiqueta.textContent = ehAuto ? 'Auto-mapeado' : 'Manual';
+      }
     } else if (s.obrigatoria) {
       obrigatoriasFaltando++;
       linha.className = 'linha-mapa pendente';
@@ -1712,8 +1798,8 @@ function atualizarStatusMapeamento() {
   });
   const resumo = $('resumo-mapeamento');
   if (obrigatoriasFaltando === 0) {
-    resumo.innerHTML = `<span class="chip bom">Pronto</span> <span><strong>${totalMapeados} de ${CONTAS_SISTEMA.length}</strong> campos mapeados automaticamente. Confira ou clique em <em>Confirmar e Analisar</em>.</span>`;
-    status('Contas mapeadas automaticamente.', 'ok');
+    resumo.innerHTML = `<span class="chip bom">Pronto</span> <span><strong>${totalMapeados} de ${CONTAS_SISTEMA.length}</strong> campos mapeados. Confira ou clique em <em>Confirmar e Analisar</em>.</span>`;
+    status('Contas mapeadas.', 'ok');
   } else {
     resumo.innerHTML = `<span class="chip atencao">${obrigatoriasFaltando} pendente(s)</span> <span><strong>${totalMapeados} de ${CONTAS_SISTEMA.length}</strong> campos mapeados. Selecione manualmente os campos obrigatórios restantes.</span>`;
     status(`Atenção: ${obrigatoriasFaltando} campo(s) obrigatório(s) aguardando seleção manual.`, '');
@@ -1724,7 +1810,10 @@ function aplicarAutoMapeamento() {
   sugestaoAuto = obterMapeamentoAutomatico(contasArquivo);
   CONTAS_SISTEMA.forEach(s => {
     const seletor = $(`mapa-${s.id}`);
-    if (seletor) seletor.value = sugestaoAuto[s.id] || '';
+    if (seletor) {
+      if (seletor.value && seletor.value.startsWith('__custom__:')) return;
+      seletor.value = sugestaoAuto[s.id] || '';
+    }
   });
   atualizarStatusMapeamento();
 }
@@ -1749,14 +1838,11 @@ function exibirMapeamento(contas, animar = true) {
     div.id = `linha-${s.id}`;
     div.innerHTML = `<label for="mapa-${s.id}"><span>${s.nome}${s.obrigatoria ? ' *' : ''}</span><span id="etiqueta-${s.id}" class="etiqueta-mapa"></span></label><select id="mapa-${s.id}"><option value="">-- Ignorar --</option></select>`;
     const seletor = div.querySelector('select');
-    contas.forEach(c => {
-      const opcao = document.createElement('option');
-      opcao.value = c; opcao.textContent = c;
-      seletor.appendChild(opcao);
-    });
     seletor.onchange = atualizarStatusMapeamento;
     conteiner.appendChild(div);
   });
+
+  atualizarOpcoesSeletoresMapeamento();
   aplicarAutoMapeamento();
   renderizarCamposExtras();
 
@@ -1787,6 +1873,12 @@ function obterVariaveisDisponiveis(indiceAtual) {
   camposPersonalizados.forEach((c, idx) => {
     if (idx < indiceAtual && c.id && !vars.includes(c.id)) vars.push(c.id);
   });
+  (contasArquivo || []).forEach(c => {
+    const slug = normalizarIdentificadorConta(c);
+    if (slug && !vars.includes(slug)) {
+      vars.push(slug);
+    }
+  });
   return vars;
 }
 
@@ -1802,11 +1894,13 @@ function adicionarCampoExtra(tipoInicial = 'simples') {
     formula: ''
   });
   renderizarCamposExtras();
+  atualizarOpcoesSeletoresMapeamento();
 }
 
 function removerCampoExtra(uid) {
   camposPersonalizados = camposPersonalizados.filter(c => c.uid !== uid);
   renderizarCamposExtras();
+  atualizarOpcoesSeletoresMapeamento();
 }
 
 function inserirNaFormula(uid, token) {
@@ -1827,6 +1921,40 @@ function inserirNaFormula(uid, token) {
   input.setSelectionRange(novaPos, novaPos);
 }
 
+function gerarOpcoesPicklistVariaveis(indiceAtual) {
+  let html = '<option value="">+ Selecionar campo para adicionar...</option>';
+
+  html += '<optgroup label="Variáveis do Sistema">';
+  VARIAVEIS_FORMULA_BASE.forEach(v => {
+    const rotulo = ROTULOS[v] || v;
+    html += `<option value="${v}">${v} (${rotulo})</option>`;
+  });
+  html += '</optgroup>';
+
+  const extrasAnteriores = camposPersonalizados.filter((c, idx) => idx < indiceAtual && c.id);
+  if (extrasAnteriores.length > 0) {
+    html += '<optgroup label="Campos Personalizados">';
+    extrasAnteriores.forEach(c => {
+      const nomeExib = c.nome ? c.nome : c.id;
+      html += `<option value="${c.id}">${c.id} (${nomeExib})</option>`;
+    });
+    html += '</optgroup>';
+  }
+
+  if (contasArquivo && contasArquivo.length > 0) {
+    html += '<optgroup label="Contas do Arquivo CSV">';
+    contasArquivo.forEach(conta => {
+      const slug = normalizarIdentificadorConta(conta);
+      if (slug && !VARIAVEIS_FORMULA_BASE.includes(slug)) {
+        html += `<option value="${slug}">${slug} (${conta})</option>`;
+      }
+    });
+    html += '</optgroup>';
+  }
+
+  return html;
+}
+
 function renderizarCamposExtras() {
   const conteiner = $('lista-campos-extras');
   if (!conteiner) return;
@@ -1840,12 +1968,9 @@ function renderizarCamposExtras() {
       .concat(contasArquivo.map(c => `<option value="${c.replace(/"/g, '&quot;')}" ${item.conta_csv === c ? 'selected' : ''}>${c}</option>`))
       .join('');
 
-    const variaveisDisp = obterVariaveisDisponiveis(idx);
-    const botoesVars = variaveisDisp.map(v =>
-      `<button type="button" class="chip-var" data-uid="${item.uid}" data-token="${v}" title="Inserir variável ${v}">${v}</button>`
-    ).join('');
+    const opcoesPicklist = gerarOpcoesPicklistVariaveis(idx);
     const botoesOps = OPERADORES_FORMULA.map(op =>
-      `<button type="button" class="chip-var" data-uid="${item.uid}" data-token="${op}" title="Inserir ${op}">${op}</button>`
+      `<button type="button" class="chip-var" data-uid="${item.uid}" data-token="${op}" title="Inserir operador ${op}">${op}</button>`
     ).join('');
 
     cartao.innerHTML = `
@@ -1880,9 +2005,18 @@ function renderizarCamposExtras() {
         ` : `
           <div class="campo-form" style="grid-column: 1 / -1">
             <label for="extra-formula-${item.uid}">Fórmula matemática</label>
-            <input type="text" id="extra-formula-${item.uid}" placeholder="Ex: lucro_liquido / receita   ou   ebitda - capex" value="${item.formula.replace(/"/g, '&quot;')}">
-            <div class="ajuda-formula">Clique nos campos ou operadores abaixo para inserir na fórmula:</div>
-            <div class="chips-variaveis">${botoesVars} ${botoesOps}</div>
+            <input type="text" id="extra-formula-${item.uid}" placeholder="Ex: amortizacao + depreciacao   ou   ebitda - capex" value="${item.formula.replace(/"/g, '&quot;')}">
+            <div class="barra-insercao-formula">
+              <div class="seletor-variavel-bloco">
+                <select id="extra-var-select-${item.uid}">
+                  ${opcoesPicklist}
+                </select>
+              </div>
+              <div class="operadores-formula">
+                <span class="label-ops">Operadores:</span>
+                ${botoesOps}
+              </div>
+            </div>
           </div>
         `}
       </div>
@@ -1897,12 +2031,14 @@ function renderizarCamposExtras() {
     selTipo.onchange = e => {
       item.tipo = e.target.value;
       renderizarCamposExtras();
+      atualizarOpcoesSeletoresMapeamento();
     };
     inpNome.oninput = e => {
       item.nome = e.target.value;
       item.id = gerarIdentificadorCampo(item.nome, item.uid);
       const badge = $(`extra-id-badge-${item.uid}`);
       if (badge) badge.textContent = item.id;
+      atualizarOpcoesSeletoresMapeamento();
     };
     btnRemover.onclick = () => removerCampoExtra(item.uid);
 
@@ -1917,17 +2053,32 @@ function renderizarCamposExtras() {
           inpNome.value = item.nome;
           const badge = $(`extra-id-badge-${item.uid}`);
           if (badge) badge.textContent = item.id;
+          atualizarOpcoesSeletoresMapeamento();
         }
       };
       chkMilhao.onchange = e => { item.dividir_milhao = e.target.checked; };
     } else {
       const inpFormula = $(`extra-formula-${item.uid}`);
       inpFormula.oninput = e => { item.formula = e.target.value; };
+
+      const selVar = $(`extra-var-select-${item.uid}`);
+      if (selVar) {
+        selVar.onchange = e => {
+          const val = e.target.value;
+          if (val) {
+            inserirNaFormula(item.uid, val);
+            selVar.value = '';
+          }
+        };
+      }
+
       cartao.querySelectorAll('.chip-var').forEach(btn => {
         btn.onclick = () => inserirNaFormula(item.uid, btn.getAttribute('data-token'));
       });
     }
   });
+
+  atualizarOpcoesSeletoresMapeamento();
 }
 
 function coletarCamposExtrasValidados() {
@@ -1937,7 +2088,7 @@ function coletarCamposExtrasValidados() {
     if (!nomeLimpo) {
       throw new Error(`Informe um nome para o Campo personalizado #${idx + 1}.`);
     }
-    let idFinal = gerarIdentificadorCampo(nomeLimpo, item.uid);
+    let idFinal = item.id || gerarIdentificadorCampo(nomeLimpo, item.uid);
     while (idsUsados.has(idFinal)) {
       idFinal = `${idFinal}_${item.uid}`;
     }
@@ -1977,9 +2128,9 @@ $('btn-automapear').onclick = () => aplicarAutoMapeamento();
 $('btn-analisar').onclick = async () => {
   try {
     carregando(true); status('Processando...');
+    const extrasValidados = coletarCamposExtrasValidados();
     const mapa = {};
     CONTAS_SISTEMA.forEach(s => { const v = $(`mapa-${s.id}`).value; if (v) mapa[v] = s.id; });
-    const extrasValidados = coletarCamposExtrasValidados();
     const resJson = analise.processar('/tmp/dados.csv', JSON.stringify(mapa), JSON.stringify(extrasValidados));
     resultado = JSON.parse(resJson);
     (resultado.campos_extras || []).forEach(c => { ROTULOS[c.id] = c.nome; });

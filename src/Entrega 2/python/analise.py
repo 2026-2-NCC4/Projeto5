@@ -211,7 +211,7 @@ def sugerir_mapeamento(contas):
     return json.dumps(auto_mapear_contas(list(contas)))
 
 # Carregar dados usando o mapeamento fornecido (ou auto-mapeamento) e campos extras
-def carregar_base(caminho, mapa_usuario=None, campos_extras=None):
+def carregar_base(caminho, mapa_usuario=None, campos_extras=None, mapeamento_extras=None):
     encoding = detectar_encoding(caminho)
     if mapa_usuario:
         mapa = mapa_usuario
@@ -221,6 +221,8 @@ def carregar_base(caminho, mapa_usuario=None, campos_extras=None):
         mapa = {conta_csv: campo_id for campo_id, conta_csv in sugestao.items()}
         if not mapa:
             mapa = CONTAS_PADRAO
+
+    mapeamento_extras = mapeamento_extras or {}
 
     extras_simples = [
         c for c in (campos_extras or [])
@@ -263,8 +265,8 @@ def carregar_base(caminho, mapa_usuario=None, campos_extras=None):
     # Renomear para nomes internos do sistema
     largo = largo.rename(columns=mapa).reset_index()
 
-    # Validar campos obrigatórios
-    faltando = [c for c in OBRIGATORIAS if c not in largo.columns]
+    # Validar campos obrigatórios (ignora campos que venham de campos personalizados/fórmulas)
+    faltando = [c for c in OBRIGATORIAS if c not in largo.columns and c not in mapeamento_extras]
     if faltando:
         raise ValueError('Campos obrigatórios ausentes: ' + ', '.join(faltando))
 
@@ -331,18 +333,28 @@ def avaliar_formula_segura(base, expressao):
     return pd.Series(resultado, index=base.index).replace([np.inf, -np.inf], np.nan)
 
 # Calcular métricas derivadas e campos personalizados
-def montar_base_analitica(largo, campos_extras=None):
+def montar_base_analitica(largo, campos_extras=None, mapeamento_extras=None):
+    mapeamento_extras = mapeamento_extras or {}
     base = pd.DataFrame({'n': largo['n'], 'cen': largo['cen']})
-    base['receita'] = largo['receita'] / MILHAO
-    base['lucro_liquido'] = largo['lucro_liquido'] / MILHAO
-    base['resultado_operacional'] = largo['resultado_operacional'] / MILHAO
-    base['dep_amort'] = largo['dep_amort'].abs() / MILHAO
-    base['ebitda'] = (largo['resultado_operacional'] + largo['dep_amort'].abs()) / MILHAO
-    base['caixa'] = largo['caixa'] / MILHAO
-    base['dist'] = largo['dist'].abs() / MILHAO
-    base['saldo_final'] = largo['saldo_final'] / MILHAO
-    base['capex'] = largo['capex'].abs() / MILHAO
-    base['despfin'] = largo['despfin'].abs() / MILHAO
+
+    colunas_diretas = [
+        'receita', 'lucro_liquido', 'resultado_operacional',
+        'caixa', 'saldo_final', 'capex', 'despfin', 'dist'
+    ]
+    for col in colunas_diretas:
+        if col in largo.columns:
+            if col in ['capex', 'despfin', 'dist']:
+                base[col] = largo[col].abs() / MILHAO
+            else:
+                base[col] = largo[col] / MILHAO
+        elif col not in mapeamento_extras:
+            base[col] = 0.0
+
+    if 'dep_amort' in largo.columns:
+        base['dep_amort'] = largo['dep_amort'].abs() / MILHAO
+    elif 'dep_amort' not in mapeamento_extras:
+        base['dep_amort'] = 0.0
+
     if 'ebitda_arquivo' in largo.columns:
         base['ebitda_arquivo'] = largo['ebitda_arquivo'] / MILHAO
 
@@ -357,6 +369,23 @@ def montar_base_analitica(largo, campos_extras=None):
     for extra in extras:
         if extra.get('tipo') == 'formula' and extra.get('id'):
             base[extra['id']] = avaliar_formula_segura(base, extra.get('formula', ''))
+
+    # Aplicar mapeamento de campos do sistema vinculados a campos personalizados (fórmulas ou simples)
+    for campo_sistema, id_extra in mapeamento_extras.items():
+        if id_extra in base.columns:
+            valor = base[id_extra]
+            if campo_sistema in ['dep_amort', 'capex', 'despfin', 'dist']:
+                base[campo_sistema] = valor.abs()
+            else:
+                base[campo_sistema] = valor
+        else:
+            raise ValueError(f"Campo personalizado '{id_extra}' mapeado para '{campo_sistema}' não encontrado.")
+
+    # Calcular ou atualizar EBITDA a partir do resultado operacional e dep_amort
+    if 'resultado_operacional' in base.columns and 'dep_amort' in base.columns:
+        base['ebitda'] = base['resultado_operacional'] + base['dep_amort'].abs()
+    elif 'resultado_operacional' in base.columns:
+        base['ebitda'] = base['resultado_operacional']
 
     return base
 
@@ -476,9 +505,55 @@ def dados_graficos(base, ids_extras=None):
 def processar(caminho, mapa_json=None, extras_json=None):
     mapa = json.loads(mapa_json) if mapa_json else None
     campos_extras = json.loads(extras_json) if extras_json else []
+
+    # 1. Separar mapeamento de contas do CSV do mapeamento para campos personalizados
+    mapa_csv = {}
+    mapeamento_extras = {}
+    ids_extras_cadastrados = {c.get('id') for c in campos_extras if c.get('id')}
+
+    if mapa:
+        for k, v in mapa.items():
+            if k.startswith('__custom__:'):
+                id_ext = k.replace('__custom__:', '')
+                mapeamento_extras[v] = id_ext
+            elif k in ids_extras_cadastrados:
+                mapeamento_extras[v] = k
+            else:
+                mapa_csv[k] = v
+
+    # 2. Identificar contas do arquivo CSV que possam ter sido usadas em fórmulas diretamente
+    contas_arq = listar_contas_arquivo(caminho)
+    mapa_slug_csv = {}
+    for c in contas_arq:
+        s1 = unicodedata.normalize('NFKD', str(c)).encode('ASCII', 'ignore').decode('ASCII')
+        s1 = re.sub(r'[^a-zA-Z0-9]+', '_', s1).strip('_').lower()
+        if s1:
+            mapa_slug_csv[s1] = c
+        s2 = re.sub(r'^(dre|flu|bal)\s*[-:_]\s*', '', s1)
+        if s2 and s2 != s1:
+            mapa_slug_csv[s2] = c
+
+    # Se alguma fórmula usa esses identificadores sem estarem explícitos nos extras, adiciona como campo simples
+    campos_extras_expandidos = list(campos_extras)
+    ids_existentes = {c.get('id') for c in campos_extras_expandidos}
+    for extra in campos_extras:
+        if extra.get('tipo') == 'formula' and extra.get('formula'):
+            tokens = set(re.findall(r'\b[a-zA-Z_][a-zA-Z0-9_]*\b', extra['formula']))
+            for tok in tokens:
+                if tok in mapa_slug_csv and tok not in ids_existentes and tok not in COLUNAS:
+                    campos_extras_expandidos.append({
+                        'id': tok,
+                        'nome': mapa_slug_csv[tok],
+                        'tipo': 'simples',
+                        'conta_csv': mapa_slug_csv[tok],
+                        'dividir_milhao': True
+                    })
+                    ids_existentes.add(tok)
+
+    largo, linhas_lidas, encoding = carregar_base(caminho, mapa_csv, campos_extras_expandidos, mapeamento_extras)
+    base = montar_base_analitica(largo, campos_extras_expandidos, mapeamento_extras)
+
     ids_extras = [c['id'] for c in campos_extras if c.get('id')]
-    largo, linhas_lidas, encoding = carregar_base(caminho, mapa, campos_extras)
-    base = montar_base_analitica(largo, campos_extras)
     resultado = {
         'resumo': {
             'linhas_lidas': int(linhas_lidas), 'encoding': encoding,
