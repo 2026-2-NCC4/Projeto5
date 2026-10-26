@@ -385,7 +385,13 @@ select:focus, input[type="text"]:focus {
   border-color: var(--azul);
 }
 
-.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; }
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  overflow: hidden;
+  padding: 4px;
+}
 .kpi {
   border: 1px solid var(--linha);
   border-radius: 8px;
@@ -398,6 +404,27 @@ select:focus, input[type="text"]:focus {
 .kpi:hover {
   transform: translateY(-2px);
   box-shadow: var(--sombra-hover);
+}
+.kpi.animar-entrada-card {
+  opacity: 0;
+  transform: translateX(70px);
+  will-change: transform, opacity;
+}
+.kpi.animar-entrada-card.ativo {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.3s ease, border-color 0.3s ease;
+}
+.kpi.animar-entrada-card.ativo:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-hover);
+}
+@media (prefers-reduced-motion: reduce) {
+  .kpi.animar-entrada-card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 .kpi .nome { font-size: 0.85rem; color: var(--suave); }
 .kpi .valor { font-size: 1.45rem; font-weight: 700; margin-top: 4px; color: var(--texto); }
@@ -429,6 +456,24 @@ th:first-child, td:first-child { text-align: left; }
 th { background: var(--cabecalho-fundo); color: var(--cabecalho-texto); font-weight: 600; }
 td { color: var(--texto); }
 
+#t-mapa tr.animar-entrada-linha {
+  opacity: 0;
+  transform: translateY(-24px);
+  will-change: transform, opacity;
+}
+#t-mapa tr.animar-entrada-linha.ativo {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  #t-mapa tr.animar-entrada-linha {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .oculto { display: none !important; }
 
 @keyframes surgirSuave {
@@ -456,6 +501,23 @@ td { color: var(--texto); }
 .linha-mapa.opcional { border-left-color: var(--amarelo); }
 .linha-mapa label { flex: 1; color: var(--texto); font-weight: 600; display: flex; align-items: center; gap: 6px; }
 .linha-mapa select { flex: 2; margin-left: 0; }
+.linha-mapa.animar-entrada-cima {
+  opacity: 0;
+  transform: translateY(-22px);
+  will-change: transform, opacity;
+}
+.linha-mapa.animar-entrada-cima.ativo {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .linha-mapa.animar-entrada-cima {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 .etiqueta-mapa { font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
 .etiqueta-mapa.auto { background: var(--kpi-bom-bg); color: var(--verde); }
@@ -580,6 +642,23 @@ td.c.ruim { background: var(--erro); }
 .achado.info { border-left-color: var(--azul); background: var(--azul-suave); }
 .achado h3 { margin: 0 0 4px; font-size: 0.98rem; color: var(--texto); }
 .achado p { margin: 0; font-size: 0.9rem; color: var(--texto); }
+.achado.animar-entrada-cima {
+  opacity: 0;
+  transform: translateY(-26px);
+  will-change: transform, opacity;
+}
+.achado.animar-entrada-cima.ativo {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease, border-color 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+  .achado.animar-entrada-cima {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
 
 .resumo {
   display: flex;
@@ -1092,10 +1171,10 @@ function aplicarTema(tema, atualizarGraficos = true) {
   localStorage.setItem('datacore_tema', tema);
   atualizarIconeTema(false);
   if (atualizarGraficos && resultado) {
-    desenharEvolucao();
-    desenharConversao();
+    desenharEvolucao(false);
+    desenharConversao(false);
     desenharDistribuicao();
-    desenharRegressoes();
+    desenharRegressoes(false);
   }
 }
 
@@ -1364,6 +1443,13 @@ function navegarPara(idDestino) {
     document.body.classList.add('com-barra-superior');
     if (barraSuperior) barraSuperior.classList.remove('oculto');
     pararParticulas();
+
+    if (idDestino === 'tela-analise') {
+      window.scrollTo(0, 0);
+      if (typeof reiniciarAnimacoesGraficos === 'function') {
+        reiniciarAnimacoesGraficos();
+      }
+    }
   }
 }
 
@@ -1643,14 +1729,23 @@ function aplicarAutoMapeamento() {
   atualizarStatusMapeamento();
 }
 
-function exibirMapeamento(contas) {
+let mapeamentoTimeouts = [];
+function limparMapeamentoTimeouts() {
+  mapeamentoTimeouts.forEach(t => clearTimeout(t));
+  mapeamentoTimeouts = [];
+}
+
+function exibirMapeamento(contas, animar = true) {
+  limparMapeamentoTimeouts();
   $('s-mapeamento').classList.remove('oculto');
   $('s-mapeamento').classList.add('animar-surgir');
   $('painel').classList.add('oculto');
   const conteiner = $('lista-mapeamento'); conteiner.innerHTML = '';
+  const classeAnim = animar ? 'animar-entrada-cima' : '';
+
   CONTAS_SISTEMA.forEach(s => {
     const div = document.createElement('div');
-    div.className = 'linha-mapa';
+    div.className = `linha-mapa ${classeAnim}`;
     div.id = `linha-${s.id}`;
     div.innerHTML = `<label for="mapa-${s.id}"><span>${s.nome}${s.obrigatoria ? ' *' : ''}</span><span id="etiqueta-${s.id}" class="etiqueta-mapa"></span></label><select id="mapa-${s.id}"><option value="">-- Ignorar --</option></select>`;
     const seletor = div.querySelector('select');
@@ -1664,6 +1759,19 @@ function exibirMapeamento(contas) {
   });
   aplicarAutoMapeamento();
   renderizarCamposExtras();
+
+  if (!animar) return;
+
+  registrarAnimacaoGrafico('lista-mapeamento', () => {
+    limparMapeamentoTimeouts();
+    const cards = conteiner.querySelectorAll('.linha-mapa.animar-entrada-cima');
+    cards.forEach((card, index) => {
+      const t = setTimeout(() => {
+        card.classList.add('ativo');
+      }, index * 80);
+      mapeamentoTimeouts.push(t);
+    });
+  });
 }
 
 function gerarIdentificadorCampo(nome, indicePadrao) {
@@ -1951,7 +2059,7 @@ function montarInterface() {
   const selAno = $('filtro-ano'); selAno.innerHTML = '';
   anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = 'Ano ' + a; selAno.appendChild(o); });
   selAno.value = anos[anos.length - 1];
-  selAno.onchange = desenharKpis;
+  selAno.onchange = () => desenharKpis(true);
   
   const selC = $('filtro-conta'); selC.innerHTML = '';
   const contasGrafico = ['caixa', 'receita', 'ebitda', 'lucro_liquido', 'dist', 'saldo_final']
@@ -1965,37 +2073,88 @@ function montarInterface() {
   anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = 'Ano ' + a; selAH.appendChild(o); });
   selAH.onchange = desenharDistribuicao;
 
-  desenharKpis(); desenharMapa(); desenharAchados(); desenharEvolucao(); desenharConversao(); desenharDistribuicao(); desenharRegressoes();
+  desenharKpis(true); desenharMapa(true); desenharAchados(true); desenharEvolucao(true); desenharConversao(true); desenharDistribuicao(); desenharRegressoes(true);
 }
 
-function desenharKpis() {
+let kpiTimeouts = [];
+function limparKpiTimeouts() {
+  kpiTimeouts.forEach(t => clearTimeout(t));
+  kpiTimeouts = [];
+}
+
+function desenharKpis(animar = true) {
+  limparKpiTimeouts();
   const ano = $('filtro-ano').value;
   const itens = avaliar(ano);
   const cont = { bom: 0, atencao: 0, ruim: 0 };
   itens.forEach(i => { if(cont[i.status] !== undefined) cont[i.status]++; });
   
   $('resumo-ano').innerHTML = `<strong>Ano ${ano}:</strong> <span class="chip ruim">${cont.ruim} problemas</span> <span class="chip atencao">${cont.atencao} alertas</span> <span class="chip bom">${cont.bom} ok</span>`;
-  $('kpis').innerHTML = itens.map(i => `
-    <div class="kpi ${i.status}">
+
+  const containerKpis = $('kpis');
+  if (!containerKpis) return;
+
+  const classeAnim = animar ? 'animar-entrada-card' : '';
+  containerKpis.innerHTML = itens.map(i => `
+    <div class="kpi ${i.status} ${classeAnim}">
       <span class="selo ${i.status}">${ROTULO_STATUS[i.status]}</span>
       <div class="nome">${i.nome}</div><div class="valor">${i.valor}</div><div class="motivo">${i.motivo}</div>
     </div>
   `).join('');
+
+  if (!animar) return;
+
+  registrarAnimacaoGrafico('kpis', () => {
+    limparKpiTimeouts();
+    const cards = containerKpis.querySelectorAll('.kpi.animar-entrada-card');
+    cards.forEach((card, index) => {
+      const t = setTimeout(() => {
+        card.classList.add('ativo');
+      }, index * 95);
+      kpiTimeouts.push(t);
+    });
+  });
 }
 
-function desenharMapa() {
+let mapaTimeouts = [];
+function limparMapaTimeouts() {
+  mapaTimeouts.forEach(t => clearTimeout(t));
+  mapaTimeouts = [];
+}
+
+function desenharMapa(animar = true) {
+  limparMapaTimeouts();
   const anos = resultado.resumo.anos;
   const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'];
   const porAno = {}; anos.forEach(a => { porAno[a] = avaliar(a); });
-  let html = '<tr><th>Indicador</th>' + anos.map(a => `<th>${a}</th>`).join('') + '</tr>';
+
+  const classeAnim = animar ? 'animar-entrada-linha' : '';
+
+  let html = `<tr class="${classeAnim}"><th>Indicador</th>` + anos.map(a => `<th>${a}</th>`).join('') + '</tr>';
   ids.forEach(id => {
     const nome = porAno[anos[0]].find(i => i.id === id).nome;
-    html += `<tr><td>${nome}</td>` + anos.map(a => {
+    html += `<tr class="${classeAnim}"><td>${nome}</td>` + anos.map(a => {
       const it = porAno[a].find(i => i.id === id);
       return `<td class="c ${it.status}" title="${it.motivo}">${it.status === 'bom' ? '✓' : (it.status === 'ruim' ? '✕' : '!')}</td>`;
     }).join('') + '</tr>';
   });
-  $('t-mapa').innerHTML = html;
+
+  const tabela = $('t-mapa');
+  if (!tabela) return;
+  tabela.innerHTML = html;
+
+  if (!animar) return;
+
+  registrarAnimacaoGrafico('t-mapa', () => {
+    limparMapaTimeouts();
+    const linhas = tabela.querySelectorAll('tr.animar-entrada-linha');
+    linhas.forEach((linha, index) => {
+      const t = setTimeout(() => {
+        linha.classList.add('ativo');
+      }, index * 85);
+      mapaTimeouts.push(t);
+    });
+  });
 }
 
 function gerarAchados() {
@@ -2065,13 +2224,39 @@ function gerarAchados() {
   return achados;
 }
 
-function desenharAchados() {
+let achadosTimeouts = [];
+function limparAchadosTimeouts() {
+  achadosTimeouts.forEach(t => clearTimeout(t));
+  achadosTimeouts = [];
+}
+
+function desenharAchados(animar = true) {
+  limparAchadosTimeouts();
   const achados = gerarAchados();
-  $('achados').innerHTML = achados.map(a =>
-    '<div class="achado ' + a.tipo + '"><h3>' + a.titulo + '</h3><p>' + a.texto + '</p></div>'
+  const conteiner = $('achados');
+  if (!conteiner) return;
+
+  const classeAnim = animar ? 'animar-entrada-cima' : '';
+
+  conteiner.innerHTML = achados.map(a =>
+    `<div class="achado ${a.tipo} ${classeAnim}"><h3>${a.titulo}</h3><p>${a.texto}</p></div>`
   ).join('');
+
   textoAchados = '# Conclusões da análise\n\n' +
     achados.map(a => '## ' + a.titulo + '\n\n' + a.texto + '\n').join('\n');
+
+  if (!animar) return;
+
+  registrarAnimacaoGrafico('achados', () => {
+    limparAchadosTimeouts();
+    const cards = conteiner.querySelectorAll('.achado.animar-entrada-cima');
+    cards.forEach((card, index) => {
+      const t = setTimeout(() => {
+        card.classList.add('ativo');
+      }, index * 90);
+      achadosTimeouts.push(t);
+    });
+  });
 }
 
 $('baixar-relatorio').onclick = () => {
@@ -2082,18 +2267,167 @@ $('baixar-relatorio').onclick = () => {
   a.click();
 };
 
-function desenharEvolucao() {
+const timersAnimacao = {};
+let observadorGraficos = null;
+const graficosPendentesAnimacao = new Map();
+
+function limparTimerAnimacao(id) {
+  if (timersAnimacao[id]) {
+    clearInterval(timersAnimacao[id]);
+    delete timersAnimacao[id];
+  }
+}
+
+function limparTodosTimersAnimacao() {
+  Object.keys(timersAnimacao).forEach(id => limparTimerAnimacao(id));
+  if (typeof limparKpiTimeouts === 'function') {
+    limparKpiTimeouts();
+  }
+  if (typeof limparMapaTimeouts === 'function') {
+    limparMapaTimeouts();
+  }
+  if (typeof limparAchadosTimeouts === 'function') {
+    limparAchadosTimeouts();
+  }
+  if (typeof limparMapeamentoTimeouts === 'function') {
+    limparMapeamentoTimeouts();
+  }
+}
+
+function estaVisivelNoViewport(el) {
+  if (!el) return false;
+  // Se o elemento estiver dentro de um container oculto (display: none), não está visível
+  if (el.offsetParent === null) {
+    return false;
+  }
+  const rect = el.getBoundingClientRect();
+  const alturaJanela = window.innerHeight || document.documentElement.clientHeight || 800;
+  const larguraJanela = window.innerWidth || document.documentElement.clientWidth || 1200;
+
+  // O elemento precisa estar de fato dentro da janela de exibição visível:
+  // - Topo do gráfico precisa ter subido para dentro da janela (com 80px de margem)
+  // - Base do gráfico ainda precisa estar visível
+  const topoVisivel = rect.top < (alturaJanela - 80);
+  const fundoVisivel = rect.bottom > 80;
+  const horizontalVisivel = rect.left < larguraJanela && rect.right > 0;
+  const temDimensoes = rect.height > 80 && rect.width > 80;
+
+  return topoVisivel && fundoVisivel && horizontalVisivel && temDimensoes;
+}
+
+function checarGraficosVisiveis() {
+  if (graficosPendentesAnimacao.size === 0) return;
+
+  const idsParaExecutar = [];
+  graficosPendentesAnimacao.forEach((fnAnimacao, idElemento) => {
+    const el = $(idElemento);
+    if (el && estaVisivelNoViewport(el)) {
+      idsParaExecutar.push({ id: idElemento, fn: fnAnimacao });
+    }
+  });
+
+  idsParaExecutar.forEach(({ id, fn }) => {
+    graficosPendentesAnimacao.delete(id);
+    if (observadorGraficos) {
+      const el = $(id);
+      if (el) observadorGraficos.unobserve(el);
+    }
+    fn();
+  });
+}
+
+function registrarAnimacaoGrafico(idElemento, callbackAnimacao) {
+  const el = $(idElemento);
+  if (!el) return;
+
+  const prefereReduzido = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefereReduzido) {
+    callbackAnimacao();
+    return;
+  }
+
+  // Se já estiver de fato visível na tela no momento do registro
+  if (estaVisivelNoViewport(el)) {
+    callbackAnimacao();
+    return;
+  }
+
+  // Registra para disparar quando de fato entrar no viewport do usuário
+  graficosPendentesAnimacao.set(idElemento, callbackAnimacao);
+
+  if (typeof IntersectionObserver !== 'undefined') {
+    if (!observadorGraficos) {
+      observadorGraficos = new IntersectionObserver(() => {
+        checarGraficosVisiveis();
+      }, {
+        rootMargin: '0px 0px -70px 0px',
+        threshold: [0, 0.1, 0.2]
+      });
+    }
+    observadorGraficos.observe(el);
+  }
+}
+
+// Ouvintes de rolagem e redimensionamento para garantir disparo pontual em qualquer navegador
+window.addEventListener('scroll', checarGraficosVisiveis, { passive: true });
+window.addEventListener('resize', checarGraficosVisiveis, { passive: true });
+
+function reiniciarAnimacoesGraficos() {
+  limparTodosTimersAnimacao();
+  graficosPendentesAnimacao.clear();
+
+  if (observadorGraficos) {
+    observadorGraficos.disconnect();
+  }
+
+  if ($('s-mapeamento') && !$('s-mapeamento').classList.contains('oculto')) {
+    const cards = document.querySelectorAll('#lista-mapeamento .linha-mapa');
+    if (cards.length > 0) {
+      cards.forEach(card => card.classList.remove('ativo'));
+      registrarAnimacaoGrafico('lista-mapeamento', () => {
+        limparMapeamentoTimeouts();
+        cards.forEach((card, index) => {
+          const t = setTimeout(() => {
+            card.classList.add('ativo');
+          }, index * 80);
+          mapeamentoTimeouts.push(t);
+        });
+      });
+    }
+  }
+
+  if (resultado && $('painel') && !$('painel').classList.contains('oculto')) {
+    desenharKpis(true);
+    desenharMapa(true);
+    desenharAchados(true);
+    desenharEvolucao(true);
+    desenharConversao(true);
+    desenharDistribuicao();
+    desenharRegressoes(true);
+
+    setTimeout(() => {
+      checarGraficosVisiveis();
+    }, 80);
+  }
+}
+
+function desenharEvolucao(animar = true) {
+  limparTimerAnimacao('g-evolucao');
   const t = resultado.por_ano;
   const cores = obterCoresTema();
-  const trace = (c, n, col) => ({
-    x: t.map(l => 'Ano ' + l.ano),
-    y: t.map(l => l[c]),
-    name: n,
-    mode: 'lines+markers',
-    line: { color: col, width: 3 },
-    marker: { size: 7, color: col }
-  });
+  const anos = t.map(l => 'Ano ' + l.ano);
+  const ebitdaVals = t.map(l => l.ebitda);
+  const caixaVals = t.map(l => l.caixa);
+
+  const todosVals = [...ebitdaVals, ...caixaVals].filter(v => v !== null && !isNaN(v));
+  const minVal = Math.min(...todosVals);
+  const maxVal = Math.max(...todosVals);
+  const margemVal = Math.max(1, (maxVal - minVal) * 0.12);
+  const rangeY = [minVal - margemVal, maxVal + margemVal];
+
   const layout = obterLayoutBase('Evolução das Médias (EBITDA vs Caixa)', {
+    xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade },
+    yaxis: { range: rangeY, gridcolor: cores.grade },
     legend: {
       orientation: 'h',
       y: 1.05,
@@ -2103,24 +2437,113 @@ function desenharEvolucao() {
       font: { color: cores.texto, size: 12, family: "'Montserrat', sans-serif" }
     }
   });
-  Plotly.react('g-evolucao', [trace('ebitda', 'EBITDA', cores.azul), trace('caixa', 'Caixa', cores.laranja)], layout);
+
+  const traceEbitda = (xVals, yVals) => ({
+    x: xVals,
+    y: yVals,
+    name: 'EBITDA',
+    mode: 'lines+markers',
+    line: { color: cores.azul, width: 3 },
+    marker: { size: 7, color: cores.azul }
+  });
+
+  const traceCaixa = (xVals, yVals) => ({
+    x: xVals,
+    y: yVals,
+    name: 'Caixa',
+    mode: 'lines+markers',
+    line: { color: cores.laranja, width: 3 },
+    marker: { size: 7, color: cores.laranja }
+  });
+
+  if (!animar || anos.length <= 1) {
+    Plotly.react('g-evolucao', [traceEbitda(anos, ebitdaVals), traceCaixa(anos, caixaVals)], layout);
+    return;
+  }
+
+  // Ponto de partida inicial
+  Plotly.react('g-evolucao', [
+    traceEbitda([anos[0]], [ebitdaVals[0]]),
+    traceCaixa([anos[0]], [caixaVals[0]])
+  ], layout);
+
+  // Ao entrar na tela, anima os pontos um a um progressivamente
+  registrarAnimacaoGrafico('g-evolucao', () => {
+    let passo = 1;
+    const totalPassos = anos.length;
+    timersAnimacao['g-evolucao'] = setInterval(() => {
+      if (passo >= totalPassos) {
+        limparTimerAnimacao('g-evolucao');
+        Plotly.react('g-evolucao', [traceEbitda(anos, ebitdaVals), traceCaixa(anos, caixaVals)], layout);
+        return;
+      }
+      const sliceX = anos.slice(0, passo + 1);
+      const sliceEbitda = ebitdaVals.slice(0, passo + 1);
+      const sliceCaixa = caixaVals.slice(0, passo + 1);
+
+      Plotly.animate('g-evolucao', {
+        data: [
+          { x: sliceX, y: sliceEbitda },
+          { x: sliceX, y: sliceCaixa }
+        ]
+      }, {
+        transition: { duration: 130, easing: 'cubic-in-out' },
+        frame: { duration: 130, redraw: false }
+      });
+
+      passo++;
+    }, 150);
+  });
 }
 
-function desenharConversao() {
+function desenharConversao(animar = true) {
+  limparTimerAnimacao('g-conversao');
   const t = resultado.por_ano;
   const cores = obterCoresTema();
+  const anos = t.map(l => 'Ano ' + l.ano);
+  const valores = t.map(l => l.conversao);
+  const coresBarras = t.map(l => (l.conversao >= 0.5 ? cores.verde : (l.conversao >= 0 ? cores.laranja : cores.vermelho)));
+
+  const validos = valores.filter(v => v !== null && !isNaN(v));
+  const minV = Math.min(0, ...validos);
+  const maxV = Math.max(0.5, ...validos);
+  const pad = Math.max(0.08, (maxV - minV) * 0.12);
+  const rangeY = [minV < 0 ? minV - pad : -0.05, maxV + pad];
+
   const layout = obterLayoutBase('Índice de Conversão (Caixa / Lucro Líquido)', {
-    yaxis: { title: 'Conversão', gridcolor: cores.grade }
+    yaxis: { title: 'Conversão', range: rangeY, gridcolor: cores.grade }
   });
-  Plotly.react('g-conversao', [{
-    x: t.map(l => 'Ano ' + l.ano),
-    y: t.map(l => l.conversao),
+
+  const traceFinal = {
+    x: anos,
+    y: valores,
     type: 'bar',
-    marker: {
-      color: t.map(l => (l.conversao >= 0.5 ? cores.verde : (l.conversao >= 0 ? cores.laranja : cores.vermelho))),
-      opacity: 0.95
-    }
-  }], layout);
+    marker: { color: coresBarras, opacity: 0.95 }
+  };
+
+  if (!animar) {
+    Plotly.react('g-conversao', [traceFinal], layout);
+    return;
+  }
+
+  // Estado inicial: barras em 0
+  const traceInicial = {
+    x: anos,
+    y: anos.map(() => 0),
+    type: 'bar',
+    marker: { color: coresBarras, opacity: 0.95 }
+  };
+  Plotly.react('g-conversao', [traceInicial], layout);
+
+  // Ao entrar na tela, anima de 0 até os valores reais com efeito bounce suave
+  registrarAnimacaoGrafico('g-conversao', () => {
+    Plotly.animate('g-conversao', {
+      data: [{ y: valores }]
+    }, {
+      transition: { duration: 1600, easing: 'back-out' },
+      frame: { duration: 1600, redraw: false }
+    });
+  });
 }
 
 function desenharDistribuicao() {
@@ -2165,28 +2588,66 @@ function desenharDistribuicao() {
   $('t-descritivas').innerHTML = `<tr><th>Conta</th><th>Média</th><th>Mediana</th><th>Desvio</th><th>Outliers</th></tr>${desc}`;
 }
 
-function desenharRegressoes() {
+function desenharRegressoes(animar = true) {
+  limparTimerAnimacao('g-coef');
   const reg = resultado.regressoes;
   const cores = obterCoresTema();
+  const anos = reg.por_ano.map(l => 'Ano ' + l.ano);
+  const r2Valores = reg.por_ano.map(l => l.r2);
+
   const layoutR2 = obterLayoutBase('Qualidade do Modelo por Ano (R²)', {
     showlegend: false,
     yaxis: { range: [0, 1], gridcolor: cores.grade }
   });
-  Plotly.react('g-r2', [{
-    x: reg.por_ano.map(l => 'Ano ' + l.ano),
-    y: reg.por_ano.map(l => l.r2),
+
+  const traceR2Final = {
+    x: anos,
+    y: r2Valores,
     type: 'bar',
     name: 'R²',
     marker: { color: cores.teal }
-  }], layoutR2);
+  };
+
+  if (!animar) {
+    Plotly.react('g-r2', [traceR2Final], layoutR2);
+  } else {
+    Plotly.react('g-r2', [{
+      x: anos,
+      y: anos.map(() => 0),
+      type: 'bar',
+      name: 'R²',
+      marker: { color: cores.teal }
+    }], layoutR2);
+
+    registrarAnimacaoGrafico('g-r2', () => {
+      Plotly.animate('g-r2', {
+        data: [{ y: r2Valores }]
+      }, {
+        transition: { duration: 1500, easing: 'back-out' },
+        frame: { duration: 1500, redraw: false }
+      });
+    });
+  }
 
   if ($('g-coef') && reg.por_ano && reg.por_ano.length > 0) {
-    const anos = reg.por_ano.map(l => 'Ano ' + l.ano);
     const extrairCoef = nomeVar => reg.por_ano.map(l => {
       const it = (l.coeficientes || []).find(x => x.variavel === nomeVar);
       return it ? it.coef : null;
     });
+
+    const cEbitda = extrairCoef('ebitda');
+    const cCapex = extrairCoef('capex');
+    const cDesp = extrairCoef('despfin');
+
+    const todosCoefs = [...cEbitda, ...cCapex, ...cDesp].filter(v => v !== null && !isNaN(v));
+    const minC = Math.min(...todosCoefs);
+    const maxC = Math.max(...todosCoefs);
+    const margemC = Math.max(0.1, (maxC - minC) * 0.12);
+    const rangeY = [minC - margemC, maxC + margemC];
+
     const layoutCoef = obterLayoutBase('Sensibilidade do Caixa aos Determinantes', {
+      xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade },
+      yaxis: { range: rangeY, gridcolor: cores.grade },
       legend: {
         orientation: 'h',
         y: 1.05,
@@ -2196,13 +2657,61 @@ function desenharRegressoes() {
         font: { color: cores.texto, size: 12, family: "'Montserrat', sans-serif" }
       }
     });
-    Plotly.react('g-coef', [
-      { x: anos, y: extrairCoef('ebitda'), name: 'EBITDA', mode: 'lines+markers', line: { color: cores.azul, width: 2.5 } },
-      { x: anos, y: extrairCoef('capex'), name: 'CAPEX', mode: 'lines+markers', line: { color: cores.laranja, width: 2.5 } },
-      { x: anos, y: extrairCoef('despfin'), name: 'Desp. Fin.', mode: 'lines+markers', line: { color: cores.vermelho, width: 2.5 } }
-    ], layoutCoef);
+
+    const traceLinha = (xVals, yVals, nome, cor) => ({
+      x: xVals,
+      y: yVals,
+      name: nome,
+      mode: 'lines+markers',
+      line: { color: cor, width: 2.5 },
+      marker: { size: 6, color: cor }
+    });
+
+    if (!animar || anos.length <= 1) {
+      Plotly.react('g-coef', [
+        traceLinha(anos, cEbitda, 'EBITDA', cores.azul),
+        traceLinha(anos, cCapex, 'CAPEX', cores.laranja),
+        traceLinha(anos, cDesp, 'Desp. Fin.', cores.vermelho)
+      ], layoutCoef);
+    } else {
+      Plotly.react('g-coef', [
+        traceLinha([anos[0]], [cEbitda[0]], 'EBITDA', cores.azul),
+        traceLinha([anos[0]], [cCapex[0]], 'CAPEX', cores.laranja),
+        traceLinha([anos[0]], [cDesp[0]], 'Desp. Fin.', cores.vermelho)
+      ], layoutCoef);
+
+      registrarAnimacaoGrafico('g-coef', () => {
+        let passo = 1;
+        const totalPassos = anos.length;
+        timersAnimacao['g-coef'] = setInterval(() => {
+          if (passo >= totalPassos) {
+            limparTimerAnimacao('g-coef');
+            Plotly.react('g-coef', [
+              traceLinha(anos, cEbitda, 'EBITDA', cores.azul),
+              traceLinha(anos, cCapex, 'CAPEX', cores.laranja),
+              traceLinha(anos, cDesp, 'Desp. Fin.', cores.vermelho)
+            ], layoutCoef);
+            return;
+          }
+
+          const sliceX = anos.slice(0, passo + 1);
+          Plotly.animate('g-coef', {
+            data: [
+              { x: sliceX, y: cEbitda.slice(0, passo + 1) },
+              { x: sliceX, y: cCapex.slice(0, passo + 1) },
+              { x: sliceX, y: cDesp.slice(0, passo + 1) }
+            ]
+          }, {
+            transition: { duration: 130, easing: 'cubic-in-out' },
+            frame: { duration: 130, redraw: false }
+          });
+
+          passo++;
+        }, 150);
+      });
+    }
   }
-  
+
   if (reg.agrupado) {
     const c = reg.agrupado.coeficientes;
     $('t-agrupado').innerHTML = `<tr><th>Coeficiente</th><th>Valor</th></tr>` + c.map(i => `<tr><td>${i.variavel}</td><td>${i.coef.toFixed(4)}</td></tr>`).join('');
