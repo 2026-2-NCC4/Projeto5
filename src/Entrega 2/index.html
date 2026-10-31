@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 <style>
 :root {
   --fundo: #F0EEF5;
@@ -942,6 +944,30 @@ td.c.ruim { background: var(--erro); }
   margin: 0;
   letter-spacing: 0.5px;
 }
+
+/* --- Índices, regressão e exportação --- */
+.selo.neutro { background: var(--linha-forte); }
+.kpi.neutro { border-left-color: var(--linha-forte); }
+td.c.neutro { background: var(--linha-forte); }
+h3.sub { margin: 26px 0 10px; font-size: 1rem; color: var(--azul); }
+.nota { font-size: 0.84rem; color: var(--suave); }
+.nota p { margin: 4px 0; }
+.nota.erro { color: var(--erro); font-weight: 600; }
+.nota.ok { color: var(--verde); font-weight: 600; }
+th.txt, td.txt { text-align: left; }
+tr.grupo td { background: var(--painel-elevado); color: var(--azul); font-weight: 700; text-align: left; }
+.achado p + p { margin-top: 6px; }
+details.glossario {
+  border: 1px solid var(--linha);
+  border-left: 6px solid var(--azul);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin: 0 0 10px;
+  background: var(--painel);
+}
+details.glossario summary { cursor: pointer; font-weight: 700; font-size: 0.98rem; }
+details.glossario p { margin: 8px 0 0; font-size: 0.9rem; }
+.entrada-curta { width: 80px; }
 </style>
 </head>
 <body>
@@ -1054,8 +1080,30 @@ td.c.ruim { background: var(--erro); }
         </div>
       </section>
 
+      <section id="s-indices">
+        <h2>7. Índices financeiros</h2>
+        <div class="filtros">
+          <label>WACC (custo de capital) <input type="text" id="entrada-wacc" class="entrada-curta" inputmode="decimal" value="8,0"> % ao ano</label>
+          <button class="acao secundario" id="btn-wacc-padrao" type="button">Restaurar 8,0%</button>
+          <span class="nota">Altera EVA, EVA / Capital Investido e MVA.</span>
+        </div>
+        <div id="aviso-indices"></div>
+        <div style="overflow-x:auto"><table id="t-indices"></table></div>
+        <div class="nota" id="nota-indices"></div>
+        <div class="grade" style="margin-top:16px">
+          <div id="g-idx-ebitda" class="grafico"></div>
+          <div id="g-idx-liquidez" class="grafico"></div>
+          <div id="g-idx-endiv" class="grafico"></div>
+          <div id="g-idx-rent" class="grafico"></div>
+          <div id="g-idx-eva" class="grafico"></div>
+          <div id="g-idx-capital" class="grafico"></div>
+        </div>
+        <h3 class="sub">O que cada grupo de índices significa</h3>
+        <div id="leitura-indices"></div>
+      </section>
+
       <section>
-        <h2>7. Distribuição entre os cenários</h2>
+        <h2>8. Distribuição entre os cenários</h2>
         <div class="filtros">
           <label>Conta <select id="filtro-conta"></select></label>
           <label>Ano do histograma <select id="filtro-ano-hist"></select></label>
@@ -1067,13 +1115,76 @@ td.c.ruim { background: var(--erro); }
         <div style="overflow-x:auto; margin-top:16px"><table id="t-descritivas"></table></div>
       </section>
 
-      <section>
-        <h2>8. Regressões: Determinantes da Geração de Caixa</h2>
+      <section id="s-regressao">
+        <h2>9. Regressões: Determinantes da Geração de Caixa</h2>
+        <div id="reg-intro"></div>
+        <details class="glossario" open>
+          <summary>Como ler os resultados (glossário)</summary>
+          <div id="reg-glossario"></div>
+        </details>
+        <h3 class="sub">Resumo em linguagem simples</h3>
+        <div id="reg-resumo"></div>
+
+        <h3 class="sub">Modelos por ano: qualidade e sensibilidade</h3>
         <div class="grade">
           <div id="g-r2" class="grafico"></div>
           <div id="g-coef" class="grafico"></div>
+          <div id="g-reg-ic" class="grafico"></div>
         </div>
-        <div style="overflow-x:auto; margin-top:16px"><table id="t-agrupado"></table></div>
+        <div style="overflow-x:auto; margin-top:16px"><table id="t-reg-ano"></table></div>
+        <h3 class="sub">Detalhe de um ano</h3>
+        <div class="filtros"><label>Ano <select id="filtro-ano-reg"></select></label></div>
+        <div style="overflow-x:auto"><table id="t-reg-detalhe"></table></div>
+        <div id="leitura-ano-reg" style="margin-top:14px"></div>
+
+        <div id="bloco-modelo3">
+          <h3 class="sub">Modelo 3: anos 1 a 11 juntos, com efeito fixo de ano</h3>
+          <div style="overflow-x:auto"><table id="t-agrupado"></table></div>
+          <div style="overflow-x:auto; margin-top:16px"><table id="t-r2-modelo3"></table></div>
+          <div style="overflow-x:auto; margin-top:16px"><table id="t-vif"></table></div>
+          <div id="leitura-modelo3" style="margin-top:14px"></div>
+          <div class="grade"><div id="g-reg-rmse" class="grafico"></div></div>
+        </div>
+
+        <div id="bloco-diagnostico">
+          <h3 class="sub">Diagnóstico dos resíduos</h3>
+          <div style="overflow-x:auto"><table id="t-diag"></table></div>
+          <div id="leitura-diag" style="margin-top:14px"></div>
+          <div class="grade">
+            <div id="g-diag-res" class="grafico"></div>
+            <div id="g-diag-qq" class="grafico"></div>
+            <div id="g-diag-hist" class="grafico"></div>
+          </div>
+        </div>
+
+        <div id="bloco-validacao">
+          <h3 class="sub">Validação em cenários novos</h3>
+          <div style="overflow-x:auto"><table id="t-valid"></table></div>
+          <div id="leitura-valid" style="margin-top:14px"></div>
+          <div class="grade"><div id="g-valid" class="grafico"></div></div>
+        </div>
+
+        <div id="bloco-ano12">
+          <h3 class="sub">Ano 12 (encerramento da concessão) e anos com distribuição variável</h3>
+          <div style="overflow-x:auto"><table id="t-ano12"></table></div>
+        </div>
+
+        <h3 class="sub">O que realmente varia entre cenários</h3>
+        <p class="nota">Coeficiente de variação (desvio-padrão ÷ média) dentro de cada ano. Uma variável que não muda entre cenários não ajuda a explicar diferenças entre eles.</p>
+        <div style="overflow-x:auto"><table id="t-variacao"></table></div>
+        <div id="leitura-limites" style="margin-top:14px"></div>
+      </section>
+
+      <section id="s-exportar">
+        <h2>10. Exportar relatório</h2>
+        <p>Gera um PDF com os indicadores, o mapa de saúde, os índices financeiros, as regressões explicadas, os gráficos e as conclusões. O arquivo é montado no seu navegador.</p>
+        <div class="upload">
+          <button class="acao" id="btn-exportar-pdf" type="button">Exportar resultados em PDF</button>
+          <span id="status-pdf" class="nota"></span>
+        </div>
+        <div id="progresso-pdf" class="barra-progresso" role="progressbar" aria-label="Gerando PDF">
+          <div class="linha-progresso-animada"></div>
+        </div>
       </section>
     </div>
   </div>
@@ -1102,7 +1213,9 @@ let camposPersonalizados = [], contadorExtras = 0;
 
 const VARIAVEIS_FORMULA_BASE = [
   'receita', 'ebitda', 'lucro_liquido', 'resultado_operacional',
-  'dep_amort', 'caixa', 'capex', 'despfin', 'dist', 'saldo_final'
+  'dep_amort', 'caixa', 'capex', 'despfin', 'dist', 'saldo_final',
+  'ativo_circulante', 'passivo_circulante', 'disponivel', 'estoques', 'realizavel_lp', 'exigivel_lp',
+  'patrimonio_liquido', 'ativo_permanente', 'total_ativo', 'emprestimos', 'imposto_renda', 'resultado_antes_ir'
 ];
 const OPERADORES_FORMULA = ['+', '-', '*', '/', '(', ')', 'abs()'];
 
@@ -1111,7 +1224,7 @@ function carregando(ativo) { const el = $('progresso'); if (el) el.style.display
 function fmt(v, c) { return v === null || v === undefined ? 'n/d' : v.toLocaleString('pt-BR', { minimumFractionDigits: c, maximumFractionDigits: c }); }
 
 function obterCoresTema() {
-  const ehEscuro = document.documentElement.getAttribute('data-tema') === 'escuro';
+  const ehEscuro = (temaForcado || document.documentElement.getAttribute('data-tema')) === 'escuro';
   if (ehEscuro) {
     return {
       azul: '#5267C5',
@@ -1209,6 +1322,7 @@ function aplicarTema(tema, atualizarGraficos = true) {
     desenharConversao(false);
     desenharDistribuicao();
     desenharRegressoes(false);
+    desenharIndices(false);
   }
 }
 
@@ -1625,6 +1739,144 @@ const CONTAS_SISTEMA = [
       'Closing Cash', 'Disponibilidades Finais', 'Caixa e Equivalentes Final'
     ],
     exclusoes: ['inicial', 'opening']
+  },
+  {
+    id: 'ativo_circulante', nome: 'Ativo Circulante', obrigatoria: false,
+    sinonimos: [
+      'BAL - Ativo Circulante',
+      'Ativo Circulante',
+      'Total do Ativo Circulante',
+      'Current Assets',
+      'Total Current Assets'
+    ],
+    exclusoes: ['nao circulante', 'passivo']
+  },
+  {
+    id: 'passivo_circulante', nome: 'Passivo Circulante', obrigatoria: false,
+    sinonimos: [
+      'BAL - Passivo Circulante',
+      'Passivo Circulante',
+      'Total do Passivo Circulante',
+      'Current Liabilities',
+      'Total Current Liabilities'
+    ],
+    exclusoes: ['nao circulante', 'ativo circulante']
+  },
+  {
+    id: 'disponivel', nome: 'Disponível (Caixa e Bancos)', obrigatoria: false,
+    sinonimos: [
+      'BAL - Disponível',
+      'Disponível',
+      'Disponibilidades',
+      'Caixa e Equivalentes de Caixa',
+      'Caixa e Bancos',
+      'Cash and Cash Equivalents',
+      'Cash'
+    ],
+    exclusoes: ['saldo', 'final', 'flu -', 'dre -']
+  },
+  {
+    id: 'estoques', nome: 'Estoques', obrigatoria: false,
+    sinonimos: [
+      'BAL - Estoques Diversos',
+      'Estoques',
+      'Estoque',
+      'Inventories',
+      'Inventory'
+    ],
+    exclusoes: ['provisao']
+  },
+  {
+    id: 'realizavel_lp', nome: 'Realizável a Longo Prazo', obrigatoria: false,
+    sinonimos: [
+      'BAL - Realizável a Longo Prazo',
+      'Realizável a Longo Prazo',
+      'Ativo Realizável a Longo Prazo',
+      'Long Term Receivables'
+    ],
+    exclusoes: ['dre -', 'flu -']
+  },
+  {
+    id: 'exigivel_lp', nome: 'Exigível a Longo Prazo', obrigatoria: false,
+    sinonimos: [
+      'BAL - Exigível a Longo Prazo',
+      'Exigível a Longo Prazo',
+      'Passivo Não Circulante',
+      'Long Term Liabilities',
+      'Non-Current Liabilities'
+    ],
+    exclusoes: ['realizavel', 'dre -', 'flu -']
+  },
+  {
+    id: 'patrimonio_liquido', nome: 'Patrimônio Líquido', obrigatoria: false,
+    sinonimos: [
+      'BAL - Patrimônio Líquido',
+      'Patrimônio Líquido',
+      'Total do Patrimônio Líquido',
+      'Shareholders Equity',
+      'Total Equity',
+      'Equity',
+      'PL'
+    ],
+    exclusoes: ['dre -', 'flu -']
+  },
+  {
+    id: 'ativo_permanente', nome: 'Ativo Permanente', obrigatoria: false,
+    sinonimos: [
+      'BAL - Permanente',
+      'Ativo Permanente',
+      'Permanente',
+      'Fixed Assets'
+    ],
+    exclusoes: ['depreciacao', 'amortizacao', 'acumulad', 'dre -', 'flu -']
+  },
+  {
+    id: 'total_ativo', nome: 'Total do Ativo', obrigatoria: false,
+    sinonimos: [
+      'BAL - Total do Ativo',
+      'Total do Ativo',
+      'Ativo Total',
+      'Total Assets'
+    ],
+    exclusoes: ['passivo', 'dre -', 'flu -']
+  },
+  {
+    id: 'emprestimos', nome: 'Empréstimos', obrigatoria: false,
+    sinonimos: [
+      'BAL - Empréstimos',
+      'Empréstimos',
+      'Empréstimos e Financiamentos',
+      'Financiamentos',
+      'Dívida Bruta',
+      'Loans',
+      'Borrowings'
+    ],
+    exclusoes: ['dre -', 'flu -']
+  },
+  {
+    id: 'imposto_renda', nome: 'Imposto de Renda e CSLL', obrigatoria: false,
+    sinonimos: [
+      'DRE - Imposto de Renda e Contribuição Social',
+      'Imposto de Renda e Contribuição Social',
+      'IRPJ e CSLL',
+      'Imposto de Renda',
+      'Provisão para IR e CSLL',
+      'Income Tax'
+    ],
+    exclusoes: ['antes do', 'resultado', 'liquido', 'flu -']
+  },
+  {
+    id: 'resultado_antes_ir', nome: 'Resultado Antes do IR', obrigatoria: false,
+    sinonimos: [
+      'DRE - Resultado Antes do Imposto de Renda',
+      'Resultado Antes do Imposto de Renda',
+      'Resultado Antes dos Impostos',
+      'Lucro Antes do Imposto de Renda',
+      'LAIR',
+      'Earnings Before Tax',
+      'EBT'
+    ],
+    exclusoes: ['liquido', 'flu -']
   }
 ];
 
@@ -2202,6 +2454,8 @@ function avaliar(ano) {
     });
   });
 
+  itensIndicesAno(ano).forEach(i => itens.push(i));
+
   return itens;
 }
 
@@ -2224,7 +2478,7 @@ function montarInterface() {
   anos.forEach(a => { const o = document.createElement('option'); o.value = a; o.textContent = 'Ano ' + a; selAH.appendChild(o); });
   selAH.onchange = desenharDistribuicao;
 
-  desenharKpis(true); desenharMapa(true); desenharAchados(true); desenharEvolucao(true); desenharConversao(true); desenharDistribuicao(); desenharRegressoes(true);
+  desenharKpis(true); desenharMapa(true); desenharAchados(true); desenharEvolucao(true); desenharConversao(true); desenharDistribuicao(); desenharRegressoes(true); desenharIndices(true);
 }
 
 let kpiTimeouts = [];
@@ -2276,7 +2530,7 @@ function limparMapaTimeouts() {
 function desenharMapa(animar = true) {
   limparMapaTimeouts();
   const anos = resultado.resumo.anos;
-  const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'];
+  const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'].concat(itensIndicesAno(anos[0]).map(i => i.id));
   const porAno = {}; anos.forEach(a => { porAno[a] = avaliar(a); });
 
   const classeAnim = animar ? 'animar-entrada-linha' : '';
@@ -2286,7 +2540,7 @@ function desenharMapa(animar = true) {
     const nome = porAno[anos[0]].find(i => i.id === id).nome;
     html += `<tr class="${classeAnim}"><td>${nome}</td>` + anos.map(a => {
       const it = porAno[a].find(i => i.id === id);
-      return `<td class="c ${it.status}" title="${it.motivo}">${it.status === 'bom' ? '✓' : (it.status === 'ruim' ? '✕' : '!')}</td>`;
+      return `<td class="c ${it.status}" title="${it.motivo}">${it.status === 'bom' ? '✓' : (it.status === 'ruim' ? '✕' : (it.status === 'neutro' ? '–' : '!'))}</td>`;
     }).join('') + '</tr>';
   });
 
@@ -2363,6 +2617,8 @@ function gerarAchados() {
         '; e cada R$ 1,00 a mais de despesa financeira ' + efeito(c('despfin')) + '.'
     });
   }
+
+  achados.push(...achadosIndices());
 
   const ult = t[t.length - 1];
   if (ult && ult.ano === 12) {
@@ -2555,6 +2811,7 @@ function reiniciarAnimacoesGraficos() {
     desenharConversao(true);
     desenharDistribuicao();
     desenharRegressoes(true);
+    desenharIndices(true);
 
     setTimeout(() => {
       checarGraficosVisiveis();
@@ -2863,11 +3120,1094 @@ function desenharRegressoes(animar = true) {
     }
   }
 
-  if (reg.agrupado) {
-    const c = reg.agrupado.coeficientes;
-    $('t-agrupado').innerHTML = `<tr><th>Coeficiente</th><th>Valor</th></tr>` + c.map(i => `<tr><td>${i.variavel}</td><td>${i.coef.toFixed(4)}</td></tr>`).join('');
-  }
+  desenharDetalheRegressao(animar);
 }
+
+
+/* ======================================================================
+   UTILITÁRIOS COMUNS (índices, regressão e PDF)
+   ====================================================================== */
+const ANO_ENCERRAMENTO = 12;
+let wacc = 0.08;
+let temaForcado = null;
+
+const tem = x => x !== null && x !== undefined && isFinite(x);
+const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const fmtP = p => !tem(p) ? 'n/d' : (p < 0.001 ? '< 0,001' : fmt(p, 3));
+const fmtPct = (v, c = 1) => tem(v) ? fmt(v * 100, c) + '%' : 'N/D';
+
+function htmlCartoes(lista) {
+  return lista.map(c => `<div class="achado ${c.tipo || 'info'}"><h3>${esc(c.titulo)}</h3>${
+    String(c.texto).split('\n').map(p => `<p>${esc(p)}</p>`).join('')}</div>`).join('');
+}
+
+function htmlTabela(t) {
+  const txt = new Set(t.txt || []);
+  const cab = '<tr>' + t.cab.map((c, i) => `<th class="${txt.has(i) ? 'txt' : ''}">${esc(c)}</th>`).join('') + '</tr>';
+  const corpo = t.linhas.map(l => '<tr>' + l.map((c, i) => `<td class="${txt.has(i) ? 'txt' : ''}">${esc(c)}</td>`).join('') + '</tr>').join('');
+  return cab + corpo;
+}
+
+function comTemaClaro(fn) {
+  const anterior = temaForcado;
+  temaForcado = 'claro';
+  try { return fn(); } finally { temaForcado = anterior; }
+}
+
+function legendaTopo(cores) {
+  return { orientation: 'h', y: 1.05, yanchor: 'bottom', x: 0.02, xanchor: 'left',
+           font: { color: cores.texto, size: 12, family: "'Montserrat', sans-serif" } };
+}
+
+function faixa(valores, folga = 0.12, incluirZero = false) {
+  const v = valores.filter(tem);
+  if (!v.length) return [0, 1];
+  let mn = Math.min(...v), mx = Math.max(...v);
+  if (incluirZero) { mn = Math.min(mn, 0); mx = Math.max(mx, 0); }
+  const m = Math.max((mx - mn) * folga, 1e-9);
+  return [mn - m, mx + m];
+}
+
+// Desenha uma figura {data, layout, tipo}; 'linhas' desenha ponto a ponto e 'barras' cresce, como nos gráficos originais
+function plotarFig(id, fig, animar) {
+  limparTimerAnimacao(id);
+  if (!$(id)) return;
+  const { data, layout, tipo } = fig;
+  const n = data[0] && data[0].x ? data[0].x.length : 0;
+  if (!animar || n <= 1 || !tipo || tipo === 'estatico') { Plotly.react(id, data, layout); return; }
+  if (tipo === 'barras') {
+    Plotly.react(id, data.map(t => ({ ...t, y: t.y.map(() => 0) })), layout);
+    registrarAnimacaoGrafico(id, () => {
+      Plotly.animate(id, { data: data.map(t => ({ y: t.y })) },
+        { transition: { duration: 1500, easing: 'back-out' }, frame: { duration: 1500, redraw: false } });
+    });
+    return;
+  }
+  Plotly.react(id, data.map(t => ({ ...t, x: [t.x[0]], y: [t.y[0]] })), layout);
+  registrarAnimacaoGrafico(id, () => {
+    let passo = 1;
+    timersAnimacao[id] = setInterval(() => {
+      if (passo >= n) { limparTimerAnimacao(id); Plotly.react(id, data, layout); return; }
+      Plotly.animate(id, { data: data.map(t => ({ x: t.x.slice(0, passo + 1), y: t.y.slice(0, passo + 1) })) },
+        { transition: { duration: 130, easing: 'cubic-in-out' }, frame: { duration: 130, redraw: false } });
+      passo++;
+    }, 150);
+  });
+}
+
+/* ======================================================================
+   ÍNDICES FINANCEIROS
+   ====================================================================== */
+const INDICES = [
+  { id: 'ebitda', grupo: 'EBITDA', nome: 'EBITDA (R$ mi)', tipo: 'mi', kpi: false },
+  { id: 'margem_ebitda', nome: 'Margem EBITDA', tipo: 'pct', regra: 'alto' },
+  { id: 'lc', grupo: 'Liquidez', nome: 'Liquidez Corrente (LC)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'ls', nome: 'Liquidez Seca (LS)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'li', nome: 'Liquidez Imediata (LI)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'lg', nome: 'Liquidez Geral (LG)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'pct', grupo: 'Endividamento', nome: 'Part. de Capital de Terceiros (PCT)', tipo: 'x', sufixo: 'x', regra: 'baixo', balanco: true },
+  { id: 'ce', nome: 'Composição do Endividamento (CE)', tipo: 'pct', regra: 'baixo', balanco: true },
+  { id: 'ipl', nome: 'Imobilização do PL (IPL)', tipo: 'x', sufixo: 'x', regra: 'baixo', balanco: true },
+  { id: 'roa', grupo: 'Rentabilidade', nome: 'ROA', tipo: 'pct', regra: 'alto', balanco: true },
+  { id: 'roe', nome: 'ROE', tipo: 'pct', regra: 'alto', balanco: true },
+  { id: 'margem_liquida', nome: 'Margem Líquida', tipo: 'pct', regra: 'alto' },
+  { id: 'margem_operacional', nome: 'Margem Operacional', tipo: 'pct', regra: 'alto' },
+  { id: 'nopat', grupo: 'Valor econômico', nome: 'NOPAT (R$ mi)', tipo: 'mi', regra: 'alto' },
+  { id: 'capital_investido', nome: 'Capital Investido (R$ mi)', tipo: 'mi', kpi: false, balanco: true },
+  { id: 'eva', nome: 'EVA (R$ mi)', tipo: 'mi', regra: 'sinal', balanco: true },
+  { id: 'eva_ci', nome: 'EVA / Capital Investido', tipo: 'pct', regra: 'alto', balanco: true },
+  { id: 'mva', nome: 'MVA aproximado (R$ mi)', tipo: 'mi', regra: 'alto', balanco: true },
+];
+Object.assign(ROTULOS, {
+  margem_ebitda: 'Margem EBITDA', ativo_circulante: 'Ativo circulante', passivo_circulante: 'Passivo circulante',
+  disponivel: 'Disponível', estoques: 'Estoques', realizavel_lp: 'Realizável a longo prazo',
+  exigivel_lp: 'Exigível a longo prazo', patrimonio_liquido: 'Patrimônio líquido',
+  ativo_permanente: 'Ativo permanente', total_ativo: 'Total do ativo', emprestimos: 'Empréstimos',
+  imposto_renda: 'Imposto de renda e CSLL', resultado_antes_ir: 'Resultado antes do IR'
+});
+
+function indicesDisponiveis() {
+  return !!(resultado && resultado.indices && resultado.indices.por_ano && resultado.indices.por_ano.length);
+}
+
+// Linha de índices de um ano; EVA, EVA/CI e MVA são recalculados com o WACC da tela
+function linhaIndices(ano) {
+  if (!indicesDisponiveis()) return null;
+  const base = resultado.indices.por_ano.find(l => l.ano === Number(ano));
+  if (!base) return null;
+  const l = { ...base };
+  if (tem(l.nopat) && tem(l.capital_investido) && l.capital_investido !== 0) {
+    l.eva = l.nopat - wacc * l.capital_investido;
+    l.eva_ci = l.eva / l.capital_investido;
+    l.mva = wacc > 0 ? l.eva / wacc : null;
+  } else { l.eva = null; l.eva_ci = null; l.mva = null; }
+  return l;
+}
+const indicesPorAno = () => indicesDisponiveis() ? resultado.indices.por_ano.map(l => linhaIndices(l.ano)) : [];
+
+function valorIdx(def, l) {
+  if (!l) return null;
+  if (def.id === 'roa' && l.roa_nc) return null;
+  return tem(l[def.id]) ? l[def.id] : null;
+}
+function idxTemDados(def) { return indicesPorAno().some(l => valorIdx(def, l) !== null || (def.id === 'roa' && l.roa_nc)); }
+const indicesAtivos = () => INDICES.filter(idxTemDados);
+
+function fmtIdx(def, l) {
+  if (def.id === 'roa' && l && l.roa_nc) return 'n/c';
+  const v = valorIdx(def, l);
+  if (v === null) return 'N/D';
+  if (def.tipo === 'pct') return fmt(v * 100, 1) + '%';
+  if (def.tipo === 'mi') return fmt(v, 0);
+  return fmt(v, 2) + (def.sufixo || '');
+}
+function textoKpiIdx(def, l) {
+  const t = fmtIdx(def, l);
+  return def.tipo === 'mi' && t !== 'N/D' ? 'R$ ' + t + ' mi' : t;
+}
+
+function avaliarIndice(def, ano, l, lAnt) {
+  const base = { id: def.id, nome: def.nome, valor: textoKpiIdx(def, l) };
+  const v = valorIdx(def, l);
+  if (def.balanco && Number(ano) === ANO_ENCERRAMENTO) return { ...base, status: 'neutro', motivo: 'Encerramento da concessão: não comparável' };
+  if (v === null) return { ...base, status: 'neutro', motivo: 'Conta ausente neste ano' };
+  if (def.regra === 'liquidez') {
+    return { ...base, status: v >= 1 ? 'bom' : (v >= 0.5 ? 'atencao' : 'ruim'),
+             motivo: v >= 1 ? 'Cobre as obrigações (≥ 1,0)' : (v >= 0.5 ? 'Abaixo de 1,0' : 'Abaixo de 0,5') };
+  }
+  if (def.regra === 'sinal') {
+    return { ...base, status: v > 0 ? 'bom' : 'ruim', motivo: v > 0 ? 'Cria valor (EVA > 0)' : 'Não cobre o custo de capital' };
+  }
+  const va = valorIdx(def, lAnt);
+  if (va === null) return { ...base, status: 'neutro', motivo: 'Sem comparação' };
+  const subiu = v >= va;
+  const melhora = def.regra === 'baixo' ? !subiu || v === va : subiu;
+  const delta = def.tipo === 'pct' ? fmt(Math.abs(v - va) * 100, 1) + ' p.p.' : (va !== 0 ? fmt(Math.abs(v / va - 1) * 100, 1) + '%' : '');
+  return { ...base, status: melhora ? 'bom' : 'atencao', motivo: (subiu ? 'Subiu ' : 'Caiu ') + delta };
+}
+
+function itensIndicesAno(ano) {
+  if (!indicesDisponiveis()) return [];
+  const l = linhaIndices(ano), lAnt = linhaIndices(Number(ano) - 1);
+  return indicesAtivos().filter(d => d.kpi !== false).map(d => avaliarIndice(d, ano, l, lAnt));
+}
+
+function tabelaIndices() {
+  const linhas = indicesPorAno();
+  const cab = ['Indicador'].concat(linhas.map(l => String(l.ano)));
+  const corpo = [];
+  let grupoAtual = null;
+  indicesAtivos().forEach(def => {
+    if (def.grupo && def.grupo !== grupoAtual) { grupoAtual = def.grupo; corpo.push({ grupo: def.grupo }); }
+    let nome = def.nome;
+    if (['eva', 'eva_ci', 'mva'].includes(def.id)) nome += ` · WACC ${fmt(wacc * 100, 1)}%`;
+    corpo.push({ nome, celulas: linhas.map(l => fmtIdx(def, l)) });
+  });
+  return { cab, corpo };
+}
+
+function notasIndices() {
+  const notas = [
+    'Cada índice usa a média dos cenários de cada ano (razão das médias), como no relatório de Contabilidade e Finanças.',
+    'Passivo circulante, exigível a longo prazo, patrimônio líquido e empréstimos vêm com sinal negativo no arquivo (natureza credora); os índices usam o valor absoluto da média.',
+    `NOPAT = Resultado operacional × (1 − alíquota). Alíquota: ${resultado.indices.origem_aliquota}. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido. MVA aproximado = EVA ÷ WACC (perpetuidade).`,
+    'Liquidez seca: estoques ausentes em um ano são tratados como zero.'
+  ];
+  if (resultado.resumo.anos.includes(ANO_ENCERRAMENTO)) {
+    notas.push(`Ano ${ANO_ENCERRAMENTO} (encerramento da concessão): contas como patrimônio líquido e exigível a longo prazo deixam de existir, então LG, PCT, CE, IPL, ROE, EVA e MVA ficam N/D. O ROA aparece como n/c (não comparável) porque o total do ativo é quase zero. Os demais valores desse ano não são comparáveis aos anos 1 a ${ANO_ENCERRAMENTO - 1}.`);
+  }
+  return notas;
+}
+
+function cartoesIndices() {
+  if (!indicesDisponiveis()) return [];
+  const L = indicesPorAno();
+  const reg = L.filter(l => l.ano < ANO_ENCERRAMENTO);
+  if (!reg.length) return [];
+  const pri = reg[0], ult = reg[reg.length - 1];
+  const serie = id => reg.map(l => ({ ano: l.ano, v: l[id] })).filter(x => tem(x.v));
+  const extremo = (id, max) => { const s = serie(id); return s.length ? s.reduce((m, x) => (max ? x.v > m.v : x.v < m.v) ? x : m, s[0]) : null; };
+  const ate = `Ano ${pri.ano} ao Ano ${ult.ano}`;
+  const out = [];
+
+  let t = 'O que é: EBITDA = Resultado operacional + Depreciação e amortização. É uma aproximação do que a operação gera antes de juros, impostos e desgaste do ativo. A margem EBITDA mostra quanto de cada R$ 1,00 de receita sobra da operação.';
+  if (tem(pri.margem_ebitda) && tem(ult.margem_ebitda)) {
+    t += `\nNos dados: a margem EBITDA vai de ${fmtPct(pri.margem_ebitda)} (Ano ${pri.ano}) para ${fmtPct(ult.margem_ebitda)} (Ano ${ult.ano}) e o EBITDA médio de R$ ${fmt(pri.ebitda, 0)} mi para R$ ${fmt(ult.ebitda, 0)} mi.`;
+  }
+  const div = resultado.por_ano.map(x => x.divergencia_ebitda).filter(tem);
+  if (div.length) t += ` O EBITDA que vem pronto no arquivo difere do recalculado em ${fmt(Math.min(...div) * 100, 1)}% a ${fmt(Math.max(...div) * 100, 1)}% conforme o ano; usamos sempre o recalculado, que pode ser conferido com a DRE.`;
+  out.push({ tipo: tem(ult.margem_ebitda) && ult.margem_ebitda >= pri.margem_ebitda ? 'bom' : 'atencao', titulo: 'EBITDA e Margem EBITDA', texto: t });
+
+  if (serie('lc').length) {
+    const piorLc = extremo('lc', false);
+    t = 'O que é: LC = Ativo circulante ÷ Passivo circulante. LS tira os estoques do ativo. LI usa só o disponível. LG inclui também o longo prazo: (Ativo circulante + Realizável a LP) ÷ (Passivo circulante + Exigível a LP). Acima de 1,0 a empresa cobre o que vence com o que tem; abaixo, depende de novas entradas de caixa ou de refinanciamento (1,0 é uma referência usual, não uma regra absoluta).';
+    t += `\nNos dados: a LC vai de ${fmt(pri.lc, 2)} (Ano ${pri.ano}) para ${fmt(ult.lc, 2)} (Ano ${ult.ano}), com o ponto mais baixo de ${fmt(piorLc.v, 2)} no Ano ${piorLc.ano}.`;
+    if (tem(ult.lg)) t += ` A LG fica em ${fmt(ult.lg, 2)} no Ano ${ult.ano}${ult.lg < 1 ? ': os ativos totais a receber não cobririam todas as obrigações de uma vez' : ''}.`;
+    out.push({ tipo: ult.lc >= 1 ? 'bom' : (ult.lc >= 0.5 ? 'atencao' : 'ruim'), titulo: 'Liquidez (LC, LS, LI, LG)', texto: t });
+  }
+
+  if (serie('pct').length) {
+    const pico = extremo('pct', true);
+    t = 'O que é: PCT = (Passivo circulante + Exigível a LP) ÷ Patrimônio líquido, ou seja, quantos reais de obrigações existem para cada R$ 1,00 de capital próprio. CE = Passivo circulante ÷ (Passivo circulante + Exigível a LP): a fatia da dívida que vence no curto prazo. IPL = Ativo permanente ÷ Patrimônio líquido: quanto do capital próprio está preso em ativo fixo.';
+    t += `\nNos dados: o PCT chega ao pico de ${fmt(pico.v, 2)}x no Ano ${pico.ano} e termina em ${fmt(ult.pct, 2)}x no Ano ${ult.ano}.`;
+    if (tem(pri.ce) && tem(ult.ce)) t += ` A composição do endividamento vai de ${fmtPct(pri.ce)} para ${fmtPct(ult.ce)}: ${ult.ce > pri.ce ? 'a dívida está ficando mais concentrada no curto prazo' : 'a dívida está ficando menos concentrada no curto prazo'}.`;
+    out.push({ tipo: tem(pri.ce) && ult.ce > pri.ce ? 'atencao' : 'info', titulo: 'Endividamento (PCT, CE, IPL)', texto: t });
+  }
+
+  if (serie('roe').length || serie('roa').length) {
+    const pico = extremo('roe', true);
+    t = 'O que é: ROA = Resultado líquido ÷ Total do ativo (retorno de tudo que a empresa tem). ROE = Resultado líquido ÷ Patrimônio líquido (retorno do capital próprio, inflado por dívida). Margem líquida = Resultado líquido ÷ Receita. Margem operacional = Resultado operacional ÷ Receita.';
+    t += `\nNos dados: ${tem(pri.roa) && tem(ult.roa) ? `o ROA vai de ${fmtPct(pri.roa)} para ${fmtPct(ult.roa)}. ` : ''}${pico ? `O ROE tem pico de ${fmtPct(pico.v)} no Ano ${pico.ano} e termina em ${fmtPct(ult.roe)}. ` : ''}${tem(pri.margem_liquida) ? `A margem líquida vai de ${fmtPct(pri.margem_liquida)} para ${fmtPct(ult.margem_liquida)}.` : ''}`;
+    if (tem(pri.roa) && tem(ult.roa) && ult.roa > pri.roa) t += ' Atenção: parte da alta do ROA pode vir de um total do ativo que encolhe (número que sobe dividido por outro que cai), e não só de uma operação mais lucrativa.';
+    out.push({ tipo: 'info', titulo: 'Rentabilidade (ROA, ROE, margens)', texto: t.trim() });
+  }
+
+  const evas = serie('eva');
+  if (evas.length) {
+    const positivos = evas.filter(x => x.v > 0).length;
+    t = `O que é: NOPAT é o resultado operacional depois do imposto. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido: o que sobra depois de remunerar o capital pelo custo mínimo exigido (WACC, hoje ${fmt(wacc * 100, 1)}% ao ano). EVA positivo significa que a empresa cria valor econômico, e não só lucro contábil. O MVA aproximado é o EVA ÷ WACC (valor presente do EVA como perpetuidade).`;
+    t += `\nNos dados: o EVA é positivo em ${positivos} de ${evas.length} anos comparáveis.`;
+    if (tem(pri.eva_ci) && tem(ult.eva_ci)) t += ` A relação EVA ÷ Capital investido vai de ${fmtPct(pri.eva_ci)} para ${fmtPct(ult.eva_ci)}${ult.eva_ci < pri.eva_ci ? ': a empresa continua criando valor, mas cada real novo de capital rende proporcionalmente menos' : ''}.`;
+    out.push({ tipo: positivos === evas.length ? 'bom' : (positivos === 0 ? 'ruim' : 'atencao'), titulo: 'Valor econômico (NOPAT, EVA, MVA)', texto: t });
+  }
+  return out;
+}
+
+function achadosIndices() {
+  const cartoes = cartoesIndices();
+  return cartoes.map(c => ({ tipo: c.tipo, titulo: c.titulo, texto: c.texto.split('\n').slice(1).join(' ').replace(/^Nos dados: /, '') }))
+    .filter(a => a.texto);
+}
+
+/* ----- Figuras dos índices ----- */
+function seriesReg(ids, regulares = true) {
+  const L = indicesPorAno().filter(l => !regulares || l.ano < ANO_ENCERRAMENTO);
+  const anos = L.map(l => 'Ano ' + l.ano);
+  const vals = id => { const d = INDICES.find(x => x.id === id); return L.map(l => valorIdx(d, l)); };
+  return { anos, vals };
+}
+function traceLinhaIdx(x, y, nome, cor, extra = {}) {
+  return { x, y, name: nome, mode: 'lines+markers', line: { color: cor, width: 2.5 }, marker: { size: 6, color: cor }, ...extra };
+}
+
+function figIdxEbitda() {
+  const cores = obterCoresTema();
+  const L = indicesPorAno();
+  const anos = L.map(l => 'Ano ' + l.ano);
+  const arq = resultado.por_ano.map(l => tem(l.ebitda_arquivo) ? l.ebitda_arquivo : null);
+  const data = [
+    { x: anos, y: L.map(l => l.ebitda), name: 'EBITDA recalculado', type: 'bar', marker: { color: cores.azul } }
+  ];
+  if (arq.some(v => v !== null)) data.push({ x: anos, y: arq, name: 'EBITDA do arquivo', type: 'bar', marker: { color: cores.amarelo } });
+  data.push(traceLinhaIdx(anos, L.map(l => l.margem_ebitda), 'Margem EBITDA (eixo direito)', cores.verde, { yaxis: 'y2' }));
+  const layout = obterLayoutBase('EBITDA e Margem EBITDA', {
+    barmode: 'group', legend: legendaTopo(cores), margin: { r: 50 },
+    xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade },
+    yaxis: { title: 'R$ milhões', gridcolor: cores.grade },
+    yaxis2: { overlaying: 'y', side: 'right', tickformat: '.0%', range: [0, 1], showgrid: false, tickfont: { color: cores.texto, size: 11 } }
+  });
+  return { data, layout, tipo: 'estatico' };
+}
+
+function figIdxLiquidez() {
+  const cores = obterCoresTema();
+  const s = seriesReg();
+  const defs = [['lc', 'LC', cores.azul], ['ls', 'LS', cores.verde], ['li', 'LI', cores.laranja], ['lg', 'LG', cores.roxo]];
+  const data = defs.map(([id, nome, cor]) => traceLinhaIdx(s.anos, s.vals(id), nome, cor));
+  const todos = defs.flatMap(([id]) => s.vals(id));
+  const [mn, mx] = faixa(todos.concat([0, 1]), 0.1);
+  const layout = obterLayoutBase('Liquidez (Anos 1 a 11)', {
+    legend: legendaTopo(cores),
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
+    yaxis: { range: [Math.max(0, mn), mx], gridcolor: cores.grade },
+    shapes: [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 1, y1: 1, line: { color: cores.vermelho, width: 1.5, dash: 'dash' } }],
+    annotations: [{ xref: 'paper', x: 1, y: 1, text: 'referência 1,0', showarrow: false, xanchor: 'right', yanchor: 'bottom', font: { size: 10, color: cores.vermelho } }]
+  });
+  return { data, layout, tipo: 'linhas' };
+}
+
+function figIdxEndiv() {
+  const cores = obterCoresTema();
+  const s = seriesReg();
+  const data = [
+    traceLinhaIdx(s.anos, s.vals('pct'), 'PCT (x)', cores.azul),
+    traceLinhaIdx(s.anos, s.vals('ipl'), 'IPL (x)', cores.laranja),
+    traceLinhaIdx(s.anos, s.vals('ce'), 'CE (%, eixo direito)', cores.vermelho, { yaxis: 'y2', line: { color: cores.vermelho, width: 2.5, dash: 'dot' } })
+  ];
+  const layout = obterLayoutBase('Endividamento (Anos 1 a 11)', {
+    legend: legendaTopo(cores), margin: { r: 50 },
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(s.vals('pct').concat(s.vals('ipl')), 0.12, true), title: 'vezes', gridcolor: cores.grade },
+    yaxis2: { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(s.vals('ce'), 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } }
+  });
+  return { data, layout, tipo: 'linhas' };
+}
+
+function figIdxRent() {
+  const cores = obterCoresTema();
+  const s = seriesReg();
+  const defs = [['roa', 'ROA', cores.azul], ['roe', 'ROE', cores.rosa], ['margem_liquida', 'Margem líquida', cores.verde], ['margem_operacional', 'Margem operacional', cores.laranja]];
+  const data = defs.map(([id, nome, cor]) => traceLinhaIdx(s.anos, s.vals(id), nome, cor));
+  const layout = obterLayoutBase('Rentabilidade (Anos 1 a 11)', {
+    legend: legendaTopo(cores),
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(defs.flatMap(([id]) => s.vals(id)), 0.1, true), tickformat: '.0%', gridcolor: cores.grade }
+  });
+  return { data, layout, tipo: 'linhas' };
+}
+
+function figIdxEva() {
+  const cores = obterCoresTema();
+  const s = seriesReg();
+  const eva = s.vals('eva');
+  const data = [
+    { x: s.anos, y: eva, name: 'EVA (R$ mi)', type: 'bar', marker: { color: eva.map(v => v !== null && v < 0 ? cores.vermelho : cores.teal) } },
+    traceLinhaIdx(s.anos, s.vals('eva_ci'), 'EVA / Capital investido (eixo direito)', cores.laranja, { yaxis: 'y2' })
+  ];
+  const layout = obterLayoutBase(`EVA e EVA / Capital Investido (WACC ${fmt(wacc * 100, 1)}%)`, {
+    legend: legendaTopo(cores), margin: { r: 50 },
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(eva, 0.12, true), title: 'R$ milhões', gridcolor: cores.grade },
+    yaxis2: { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(s.vals('eva_ci'), 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } }
+  });
+  return { data, layout, tipo: 'estatico' };
+}
+
+function figIdxCapital() {
+  const cores = obterCoresTema();
+  const s = seriesReg();
+  const data = [
+    traceLinhaIdx(s.anos, s.vals('nopat'), 'NOPAT', cores.azul),
+    traceLinhaIdx(s.anos, s.vals('capital_investido'), 'Capital investido', cores.laranja)
+  ];
+  const layout = obterLayoutBase('NOPAT e Capital Investido (R$ milhões)', {
+    legend: legendaTopo(cores),
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(s.vals('nopat').concat(s.vals('capital_investido')), 0.12, true), gridcolor: cores.grade }
+  });
+  return { data, layout, tipo: 'linhas' };
+}
+
+const FIGURAS_INDICES = [
+  ['g-idx-ebitda', figIdxEbitda, ['ebitda']], ['g-idx-liquidez', figIdxLiquidez, ['lc']],
+  ['g-idx-endiv', figIdxEndiv, ['pct']], ['g-idx-rent', figIdxRent, ['roa', 'roe', 'margem_liquida']],
+  ['g-idx-eva', figIdxEva, ['eva']], ['g-idx-capital', figIdxCapital, ['capital_investido']]
+];
+const figuraIndiceDisponivel = ids => ids.some(id => idxTemDados(INDICES.find(d => d.id === id)));
+
+function desenharIndices(animar = true) {
+  const secao = $('s-indices');
+  if (!secao) return;
+  if (!indicesDisponiveis()) { secao.classList.add('oculto'); return; }
+  secao.classList.remove('oculto');
+
+  const aus = resultado.indices.campos_ausentes || [];
+  $('aviso-indices').innerHTML = aus.length
+    ? htmlCartoes([{ tipo: 'atencao', titulo: 'Alguns campos de balanço não foram mapeados',
+        texto: 'Sem estes campos, os índices que dependem deles ficam indisponíveis: ' + aus.map(a => ROTULOS[a] || a).join(', ') + '. Recarregue o arquivo e associe as contas na etapa de mapeamento.' }])
+    : '';
+
+  const t = tabelaIndices();
+  $('t-indices').innerHTML = '<tr>' + t.cab.map((c, i) => `<th>${esc(c)}</th>`).join('') + '</tr>' +
+    t.corpo.map(l => l.grupo
+      ? `<tr class="grupo"><td colspan="${t.cab.length}">${esc(l.grupo)}</td></tr>`
+      : `<tr><td>${esc(l.nome)}</td>${l.celulas.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('');
+  $('nota-indices').innerHTML = notasIndices().map(n => `<p>${esc(n)}</p>`).join('');
+
+  FIGURAS_INDICES.forEach(([id, fn, ids]) => {
+    const el = $(id);
+    if (!el) return;
+    const ok = figuraIndiceDisponivel(ids);
+    el.classList.toggle('oculto', !ok);
+    if (ok) plotarFig(id, fn(), animar);
+  });
+  $('leitura-indices').innerHTML = htmlCartoes(cartoesIndices());
+}
+
+function configurarWacc() {
+  const campo = $('entrada-wacc');
+  if (!campo) return;
+  campo.value = fmt(wacc * 100, 1);
+  const aplicar = () => {
+    const n = parseFloat(String(campo.value).replace('%', '').replace(',', '.'));
+    if (!isFinite(n) || n <= 0 || n > 100) { campo.value = fmt(wacc * 100, 1); return; }
+    wacc = n / 100;
+    campo.value = fmt(wacc * 100, 1);
+    if (resultado) { desenharIndices(false); desenharKpis(false); desenharMapa(false); desenharAchados(false); }
+  };
+  campo.onchange = aplicar;
+  campo.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); aplicar(); } };
+  $('btn-wacc-padrao').onclick = () => { campo.value = '8,0'; aplicar(); };
+}
+
+/* ======================================================================
+   REGRESSÃO: EXPLICAÇÕES, TABELAS E FIGURAS
+   ====================================================================== */
+const VAR_NOME = { ebitda: 'EBITDA', capex: 'CAPEX', despfin: 'Despesas financeiras', dist: 'Distribuição' };
+const REG = () => resultado.regressoes;
+
+const GLOSSARIO_REG = [
+  ['R²', 'Parcela (de 0 a 1) da variação do caixa entre cenários que o modelo explica. R² = 0,60 quer dizer que o modelo explica 60% das diferenças; os outros 40% vêm de fatores que ficaram fora do modelo. Perto de 1 o ajuste é muito bom; perto de 0 a variável quase não explica nada.'],
+  ['R² ajustado', 'R² corrigido pelo número de variáveis. Só sobe se a variável nova ajuda de verdade, por isso serve para comparar modelos com quantidades diferentes de variáveis.'],
+  ['R² interno (within)', 'No Modelo 3, mede quanto o modelo explica além da média de cada ano. É o número mais honesto: o R² total é inflado porque o caixa médio muda muito de um ano para o outro, e isso o modelo "acerta" só pelo efeito de ano.'],
+  ['Coeficiente', 'Quantos reais o caixa muda, em média, quando a variável sobe R$ 1,00, mantendo as outras constantes. Coeficiente do EBITDA perto de 1 significaria lucro virando caixa quase 1 para 1; entre 0 e 1, só parte do lucro vira caixa; negativo, mais EBITDA vem acompanhado de menos caixa.'],
+  ['Erro-padrão robusto', 'Mede a incerteza do coeficiente. Usamos erros robustos (HC3) nos modelos por ano e erros agrupados por cenário no Modelo 3, porque os resíduos não têm variância constante e o mesmo cenário aparece em vários anos.'],
+  ['p-valor', 'Probabilidade de observar um coeficiente tão distante de zero se, na verdade, a variável não tivesse efeito. p < 0,05 costuma ser lido como "estatisticamente significativo". Com p alto não dá para distinguir o efeito de zero. Significativo não é o mesmo que importante: olhe também o tamanho do coeficiente.'],
+  ['IC 95%', 'Faixa em que o coeficiente verdadeiro deve estar, com 95% de confiança. Se a faixa inclui o zero, o efeito pode ser nulo. Faixa estreita significa estimativa precisa.'],
+  ['RMSE', 'Erro típico do modelo, na mesma unidade do caixa (R$ milhões). RMSE de 90 quer dizer que as previsões erram, em média, cerca de R$ 90 milhões para mais ou para menos. Compare com o tamanho do caixa para julgar se é muito ou pouco.'],
+  ['Efeito de +1 DP', 'Quanto o caixa muda (R$ mi) quando a variável sobe um desvio-padrão dentro do ano. Permite comparar a força das variáveis mesmo com escalas diferentes (EBITDA e CAPEX, por exemplo).'],
+  ['VIF', 'Mede se duas variáveis explicativas carregam a mesma informação (multicolinearidade). VIF perto de 1 é ótimo; acima de 5 merece atenção; acima de 10 é problema, pois os coeficientes ficam instáveis.'],
+  ['Breusch-Pagan', 'Testa se o erro do modelo varia igualmente em todos os níveis (variância constante). Com p < 0,05 a variância muda, os erros-padrão comuns ficam errados e por isso usamos os robustos.'],
+  ['Jarque-Bera, assimetria e curtose', 'Testam se os erros têm formato de sino (distribuição normal). Curtose alta indica caudas pesadas: erros grandes aparecem mais do que o esperado. Com muitos dados os coeficientes continuam confiáveis, mas previsões individuais pedem cautela.'],
+  ['Distância de Cook', 'Mede quanto uma única observação puxa o modelo. Pontos acima de 4/N são os mais influentes e merecem ser olhados.'],
+  ['Validação em cenários novos', 'O modelo é ajustado em 70% dos cenários e testado nos 30% restantes. Se o erro no teste for parecido com o do treino, o modelo generaliza bem.']
+];
+
+function cartoesIntroReg() {
+  return [
+    { tipo: 'info', titulo: 'A pergunta', texto: 'O lucro operacional vira caixa? A regressão linear mede quanto da Geração de Caixa dos cenários simulados é explicada pelo EBITDA e por outros itens do fluxo de caixa. Ela mostra associação média entre as variáveis nos dados simulados; não prova causa e efeito.' },
+    { tipo: 'info', titulo: 'Os modelos', texto: 'Modelo 1: Caixa ~ EBITDA, o teste direto da tese.\nModelo 2: Caixa ~ EBITDA + CAPEX + Despesas financeiras, um para cada ano (compara cenários do mesmo ano).\nModelo 3: os anos 1 a 11 juntos, com efeito fixo de ano e erros agrupados por cenário.\nAno 12: modelo separado, porque é o encerramento da concessão e a Distribuição ao acionista passa a variar entre cenários.' },
+    { tipo: 'info', titulo: 'Unidades e sinais', texto: 'Valores em R$ milhões. CAPEX, despesas financeiras e distribuição entram em módulo (são saídas de caixa). Por isso um coeficiente negativo se lê como "quanto maior a saída, menor o caixa".' }
+  ];
+}
+
+function textoCoef(v, c) {
+  if (!c) return '';
+  const sig = tem(c.p_valor) && c.p_valor < 0.05;
+  const ic = `IC 95%: ${fmt(c.ic_inf, 2)} a ${fmt(c.ic_sup, 2)}`;
+  const pTxt = `p ${c.p_valor !== null && c.p_valor < 0.001 ? '< 0,001' : '= ' + fmtP(c.p_valor)}`;
+  const quanto = fmt(Math.abs(c.coef), 2);
+  const veredito = sig ? `Efeito estatisticamente significativo (${pTxt}).` : `Efeito que não se distingue de zero (${pTxt}).`;
+  if (v === 'ebitda') {
+    const extra = c.coef < 0 ? ' Sinal negativo: nos cenários com mais EBITDA o caixa é menor, depois de descontar as outras variáveis. O lucro não está virando caixa.'
+      : (c.coef < 1 ? ' Menos de R$ 1,00 de caixa para cada R$ 1,00 de EBITDA: parte do lucro não vira caixa.' : ' Pelo menos R$ 1,00 de caixa para cada R$ 1,00 de EBITDA.');
+    return `EBITDA: cada R$ 1,00 a mais de EBITDA se associa a R$ ${quanto} ${c.coef >= 0 ? 'a mais' : 'a menos'} de caixa (${ic}), mantendo as demais variáveis constantes. ${veredito}${extra}`;
+  }
+  if (v === 'dist') {
+    return `Distribuição: cada R$ 1,00 a mais distribuído se associa a R$ ${quanto} ${c.coef >= 0 ? 'a mais' : 'a menos'} de caixa (${ic}). ${veredito}`;
+  }
+  const nome = VAR_NOME[v] || v;
+  const esperado = c.coef < 0;
+  const extra = esperado ? '' : ' Sinal positivo, contrário ao esperado para uma saída de caixa: dentro do ano essa variável também carrega efeitos de outros fatores do cenário e não deve ser lida como causa.';
+  return `${nome}: cada R$ 1,00 a mais se associa a R$ ${quanto} ${c.coef >= 0 ? 'a mais' : 'a menos'} de caixa (${ic}). ${veredito}${extra}`;
+}
+
+function cartoesResumoReg() {
+  const reg = REG(), out = [], pa = reg.por_ano, ag = reg.agrupado;
+  if (!pa.length) return out;
+  const intervalo = a => { const v = a.filter(tem); return v.length ? [Math.min(...v), Math.max(...v)] : null; };
+  const i1 = intervalo(pa.map(x => x.r2_modelo1)), i2 = intervalo(pa.map(x => x.r2));
+  let t = '';
+  if (ag) t += `Com os anos 1 a 11 juntos, o EBITDA sozinho tem R² de ${fmt(ag.r2_modelo1, 2)}: explica cerca de ${fmt(ag.r2_modelo1 * 100, 0)}% da variação do caixa. `;
+  if (i1) t += `Olhando um ano de cada vez, o R² do EBITDA sozinho vai de ${fmt(i1[0], 2)} a ${fmt(i1[1], 2)}. `;
+  if (i2) t += `Quando entram CAPEX e despesas financeiras (Modelo 2), o R² por ano passa a ficar entre ${fmt(i2[0], 2)} e ${fmt(i2[1], 2)}.`;
+  const pior = pa.filter(x => x.coeficientes[0] && tem(x.coeficientes[0].coef) && x.coeficientes[0].coef < 0).map(x => x.ano);
+  if (pior.length) t += `\nNos anos ${pior.join(', ')} o coeficiente do EBITDA é negativo: nos cenários com mais EBITDA o caixa é menor, depois de descontar CAPEX e despesas financeiras.`;
+  out.push({ tipo: 'info', titulo: 'O EBITDA explica o caixa?', texto: t });
+
+  if (ag) {
+    const c = ag.coeficientes;
+    const forte = c.reduce((m, x) => Math.abs(x.efeito_1dp) > Math.abs(m.efeito_1dp) ? x : m, c[0]);
+    out.push({ tipo: 'info', titulo: 'Modelo 3: todos os anos juntos',
+      texto: `O R² total é ${fmt(ag.r2_total, 2)}, mas só com o efeito de ano ele já é ${fmt(ag.r2_ano_apenas, 2)}: a maior parte vem de o caixa médio mudar de um ano para o outro. O R² interno, que mede o que o modelo explica das diferenças entre cenários, é ${fmt(ag.r2_interno, 2)}.\nA variável com maior efeito (+1 desvio-padrão dentro do ano) é ${VAR_NOME[forte.variavel]}: ${fmt(forte.efeito_1dp, 1)} milhões de caixa.` });
+  }
+  const A = reg.ano12.find(m => m.modelo.startsWith('A')), B = reg.ano12.find(m => m.modelo.startsWith('B')), C = reg.ano12.find(m => m.modelo.startsWith('C'));
+  if (A && B && C) {
+    const ce = C.coeficientes.find(x => x.variavel === 'ebitda');
+    out.push({ tipo: 'atencao', titulo: `Ano ${ANO_ENCERRAMENTO}: a distribuição domina`,
+      texto: `No Ano ${ANO_ENCERRAMENTO}, o EBITDA sozinho tem R² de ${fmt(A.r2, 2)} e a distribuição sozinha tem R² de ${fmt(B.r2, 2)}. Com os dois juntos, o EBITDA ${tem(ce.p_valor) && ce.p_valor >= 0.05 ? 'perde a significância' : 'continua significativo'} (${fmtP(ce.p_valor) === '< 0,001' ? 'p < 0,001' : 'p = ' + fmtP(ce.p_valor)}).` });
+  }
+  return out;
+}
+
+function cartoesAnoReg(ano) {
+  const it = REG().por_ano.find(x => x.ano === Number(ano));
+  if (!it) return [];
+  const m1 = it.modelo1.coeficiente;
+  const texto = [
+    `O Modelo 2 explica ${fmt(it.r2 * 100, 0)}% da variação do caixa entre os cenários do Ano ${it.ano} (R² ajustado ${fmt(it.r2_aj, 2)}); só com o EBITDA seriam ${fmt(it.r2_modelo1 * 100, 0)}%. O erro típico (RMSE) é de R$ ${fmt(it.rmse, 1)} milhões.`,
+    `Sozinho (Modelo 1), o coeficiente do EBITDA é ${fmt(m1.coef, 2)} (${fmtP(m1.p_valor) === '< 0,001' ? 'p < 0,001' : 'p = ' + fmtP(m1.p_valor)}).`
+  ].concat(it.coeficientes.map(c => textoCoef(c.variavel, c)));
+  return [{ tipo: 'info', titulo: `Como ler o Ano ${it.ano}`, texto: texto.join('\n') }];
+}
+
+function cartoesModelo3() {
+  const ag = REG().agrupado;
+  if (!ag) return [];
+  return [{ tipo: 'info', titulo: 'Como ler o Modelo 3', texto: ag.coeficientes.map(c => textoCoef(c.variavel, c)).join('\n') +
+    `\nO erro típico (RMSE) é de R$ ${fmt(ag.rmse, 1)} milhões em ${fmt(ag.n, 0)} observações (${fmt(ag.n_cenarios, 0)} cenários × anos 1 a ${ag.n / ag.n_cenarios}).` }];
+}
+
+function tabelaRegPorAno() {
+  const pa = REG().por_ano;
+  const g = (it, v) => it.coeficientes.find(c => c.variavel === v);
+  return {
+    cab: ['Ano', 'R² (só EBITDA)', 'R² (Modelo 2)', 'R² aj.', 'RMSE', 'EBITDA', 'p', 'CAPEX', 'p', 'Desp. fin.', 'p'],
+    linhas: pa.map(it => [String(it.ano), fmt(it.r2_modelo1, 3), fmt(it.r2, 3), fmt(it.r2_aj, 3), fmt(it.rmse, 1),
+      fmt(g(it, 'ebitda').coef, 3), fmtP(g(it, 'ebitda').p_valor), fmt(g(it, 'capex').coef, 3), fmtP(g(it, 'capex').p_valor),
+      fmt(g(it, 'despfin').coef, 3), fmtP(g(it, 'despfin').p_valor)])
+  };
+}
+
+function leituraSig(c) { return !tem(c.p_valor) ? 'n/d' : (c.p_valor < 0.05 ? 'Significativo' : 'Não significativo'); }
+const fmtIC = (c, d = 3) => `[${fmt(c.ic_inf, d)} ; ${fmt(c.ic_sup, d)}]`;
+
+function tabelaDetalheAno(ano) {
+  const it = REG().por_ano.find(x => x.ano === Number(ano));
+  if (!it) return { cab: [], linhas: [] };
+  const m1 = it.modelo1.coeficiente;
+  const linhas = [['Modelo 1 · EBITDA', fmt(m1.coef, 3), fmt(m1.erro_padrao, 3), fmtP(m1.p_valor), fmtIC(m1), leituraSig(m1)]]
+    .concat(it.coeficientes.map(c => ['Modelo 2 · ' + VAR_NOME[c.variavel], fmt(c.coef, 3), fmt(c.erro_padrao, 3), fmtP(c.p_valor), fmtIC(c), leituraSig(c)]));
+  return { cab: ['Variável', 'Coeficiente', 'Erro-padrão', 'p-valor', 'IC 95%', 'Leitura'], linhas, txt: [5] };
+}
+
+function tabelaModelo3() {
+  const ag = REG().agrupado;
+  if (!ag) return { cab: [], linhas: [] };
+  return {
+    cab: ['Variável', 'Coeficiente', 'Erro-padrão (por cenário)', 'p-valor', 'IC 95%', 'Efeito de +1 DP (R$ mi)', 'Leitura'],
+    linhas: ag.coeficientes.map(c => [VAR_NOME[c.variavel], fmt(c.coef, 4), fmt(c.erro_padrao, 4), fmtP(c.p_valor), fmtIC(c, 4), fmt(c.efeito_1dp, 1), leituraSig(c)]),
+    txt: [6]
+  };
+}
+
+function tabelaR2Modelo3() {
+  const ag = REG().agrupado;
+  if (!ag) return { cab: [], linhas: [] };
+  return {
+    cab: ['Medida', 'Valor', 'O que significa'],
+    linhas: [
+      ['R² total', fmt(ag.r2_total, 3), 'Inclui o efeito de ano: inflado porque o caixa médio muda muito entre os anos.'],
+      ['R² só com o efeito de ano', fmt(ag.r2_ano_apenas, 3), 'Quanto já se explica só sabendo em que ano a observação está.'],
+      ['R² interno (within)', fmt(ag.r2_interno, 3), 'O que EBITDA, CAPEX e despesas financeiras explicam além da média do ano.'],
+      ['R² ajustado', fmt(ag.r2_aj, 3), 'R² total corrigido pelo número de variáveis.'],
+      ['RMSE (R$ mi)', fmt(ag.rmse, 1), 'Erro típico do modelo.']
+    ],
+    txt: [2]
+  };
+}
+
+function tabelaVif() {
+  const ag = REG().agrupado;
+  if (!ag) return { cab: [], linhas: [] };
+  return {
+    cab: ['Variável', 'VIF', 'Leitura'],
+    linhas: ag.vif.map(v => [VAR_NOME[v.variavel], fmt(v.vif, 2), !tem(v.vif) ? 'Colinearidade perfeita' : (v.vif < 5 ? 'Sem problema' : (v.vif < 10 ? 'Atenção: moderada' : 'Problema: alta'))]),
+    txt: [2]
+  };
+}
+
+function tabelaDiagnosticos() {
+  const d = REG().diagnosticos;
+  if (!d) return { cab: [], linhas: [] };
+  const pTxt = p => p !== null && p < 0.001 ? '< 0,001' : fmt(p, 3);
+  return {
+    cab: ['Teste', 'Valor', 'O que mede', 'Resultado'],
+    linhas: [
+      ['Breusch-Pagan', `LM = ${fmt(d.bp_lm, 1)} (p ${pTxt(d.bp_p)})`, 'Se a variância dos erros é constante', d.bp_p < 0.05 ? 'Variância não constante: usamos erros robustos' : 'Variância aproximadamente constante'],
+      ['Jarque-Bera', `${fmt(d.jb, 0)} (p ${pTxt(d.jb_p)})`, 'Se os erros seguem a normal', d.jb_p < 0.05 ? 'Erros não normais' : 'Compatível com a normal'],
+      ['Assimetria', fmt(d.assimetria, 2), 'Simetria dos erros (0 = simétrico)', Math.abs(d.assimetria) < 0.5 ? 'Aproximadamente simétrico' : (d.assimetria > 0 ? 'Cauda longa para valores positivos' : 'Cauda longa para valores negativos')],
+      ['Curtose em excesso', fmt(d.curtose, 2), 'Peso das caudas (0 = normal)', d.curtose > 1 ? 'Caudas pesadas: erros grandes mais frequentes' : 'Caudas próximas do normal'],
+      ['Pontos influentes (Cook > 4/N)', `${fmt(d.cook_n, 0)} (${fmt(d.cook_pct, 1)}%)`, 'Observações que puxam o modelo', d.cook_pct < 5 ? 'Poucos pontos influentes' : 'Muitos pontos influentes: vale investigar'],
+      ['Correlação entre anos seguidos', fmt(d.autocorrelacao, 2), 'Se o erro de um ano se repete no seguinte, no mesmo cenário', Math.abs(d.autocorrelacao) > 0.3 ? 'Há dependência: por isso agrupamos os erros por cenário' : 'Dependência fraca']
+    ],
+    txt: [2, 3]
+  };
+}
+
+function cartoesDiagnosticos() {
+  const d = REG().diagnosticos, ag = REG().agrupado;
+  if (!d) return [];
+  const prob = [];
+  if (d.bp_p < 0.05) prob.push('a variância dos erros não é constante');
+  if (d.jb_p < 0.05) prob.push('os erros têm caudas pesadas e não seguem a normal');
+  if (Math.abs(d.autocorrelacao) > 0.3) prob.push('o erro de um ano se repete no ano seguinte do mesmo cenário');
+  const maxVif = Math.max(...ag.vif.map(v => v.vif).filter(tem));
+  let t = prob.length ? `Os pressupostos não são perfeitos: ${prob.join('; ')}. Na prática, isso torna os erros-padrão comuns pouco confiáveis, e por isso usamos erros robustos e agrupados por cenário. Os coeficientes continuam interpretáveis, mas previsões individuais devem ser lidas com cautela.` : 'Os pressupostos principais ficaram dentro do esperado.';
+  t += `\nMulticolinearidade: o maior VIF é ${fmt(maxVif, 2)}, ${maxVif < 5 ? 'então as variáveis não se confundem entre si' : 'o que merece atenção'}.`;
+  return [{ tipo: prob.length ? 'atencao' : 'bom', titulo: 'O que o diagnóstico diz', texto: t }];
+}
+
+function tabelaValidacao() {
+  const v = REG().validacao;
+  if (!v) return { cab: [], linhas: [] };
+  return {
+    cab: ['Modelo', 'RMSE treino', 'RMSE teste', 'MAE teste', 'R² teste'],
+    linhas: v.modelos.map(m => [m.modelo, fmt(m.rmse_treino, 1), fmt(m.rmse_teste, 1), fmt(m.mae_teste, 1), fmt(m.r2_teste, 3)])
+  };
+}
+
+function cartoesValidacao() {
+  const v = REG().validacao;
+  if (!v) return [];
+  const base = v.modelos[0], ult = v.modelos[v.modelos.length - 1];
+  const ganho = base.rmse_teste > 0 ? (1 - ult.rmse_teste / base.rmse_teste) * 100 : null;
+  return [{ tipo: 'info', titulo: 'Funciona em cenários novos?',
+    texto: `O modelo foi ajustado com ${v.n_treino} cenários e testado em ${v.n_teste} cenários que não viu. No teste, o Modelo 3 erra em média R$ ${fmt(ult.rmse_teste, 1)} milhões (RMSE), contra R$ ${fmt(base.rmse_teste, 1)} milhões de quem só usa a média do ano${tem(ganho) ? `, uma redução de ${fmt(ganho, 0)}% do erro` : ''}. O RMSE no teste (${fmt(ult.rmse_teste, 1)}) é ${Math.abs(ult.rmse_teste - ult.rmse_treino) / ult.rmse_treino < 0.1 ? 'parecido com' : 'diferente de'} o do treino (${fmt(ult.rmse_treino, 1)}), ${Math.abs(ult.rmse_teste - ult.rmse_treino) / ult.rmse_treino < 0.1 ? 'sinal de que o modelo generaliza.' : 'sinal de possível sobreajuste.'}` }];
+}
+
+function tabelaAno12() {
+  const reg = REG();
+  const cel = (m, v) => { const c = m.coeficientes.find(x => x.variavel === v); return c ? `${fmt(c.coef, 2)} (${fmtP(c.p_valor)})` : '-'; };
+  const linhas = reg.ano12.map(m => [m.modelo, fmt(m.r2, 3), fmt(m.r2_aj, 3), fmt(m.rmse, 1), cel(m, 'ebitda'), cel(m, 'dist'), cel(m, 'capex'), cel(m, 'despfin')]);
+  reg.ano_dist_variavel.forEach(m => linhas.push([`Ano ${m.ano}: E`, fmt(m.r2, 3), fmt(m.r2_aj, 3), fmt(m.rmse, 1), cel(m, 'ebitda'), cel(m, 'dist'), cel(m, 'capex'), cel(m, 'despfin')]));
+  return { cab: ['Especificação', 'R²', 'R² aj.', 'RMSE', 'EBITDA: coef. (p)', 'Distrib.: coef. (p)', 'CAPEX: coef. (p)', 'Desp. fin.: coef. (p)'], linhas, txt: [0] };
+}
+
+function tabelaVariacao() {
+  const v = REG().variacao_por_ano;
+  const f = x => !tem(x) ? 'n/d' : (x === 0 ? '0,0% (fixa)' : fmt(x, 1) + '%');
+  return {
+    cab: ['Ano', 'EBITDA', 'CAPEX', 'Desp. fin.', 'Distribuição'],
+    linhas: v.map(x => [String(x.ano), f(x.cv_ebitda), f(x.cv_capex), f(x.cv_despfin), f(x.cv_dist)])
+  };
+}
+
+function cartoesLimitacoes() {
+  const v = REG().variacao_por_ano;
+  const fixos = v.filter(x => x.cv_dist === 0).map(x => x.ano);
+  const lista = [
+    'Os dados são simulados (Monte Carlo): os resultados valem para o modelo da CTI, não para dados reais observados.',
+    'Associação não é causalidade: CAPEX e despesas financeiras carregam efeitos de outros fatores do cenário (por exemplo, o calendário da dívida).',
+    'A Geração de Caixa costuma ser composta pelos próprios itens do fluxo (como CAPEX e despesas financeiras), então parte do R² dos modelos que incluem esses itens é mecânica.'
+  ];
+  if (fixos.length) lista.push(`A distribuição é igual em todos os cenários em ${fixos.length} dos ${v.length} anos regulares (anos ${fixos.join(', ')}), então só entra nos modelos dos anos em que varia.`);
+  if (resultado.resumo.anos.includes(ANO_ENCERRAMENTO)) lista.push(`O Ano ${ANO_ENCERRAMENTO} é o encerramento da concessão, tem contas ausentes e não é comparável aos demais; por isso fica fora do Modelo 3.`);
+  return [{ tipo: 'atencao', titulo: 'Limitações', texto: lista.join('\n') }];
+}
+
+/* ----- Figuras da regressão ----- */
+function figR2() {
+  const cores = obterCoresTema();
+  const pa = REG().por_ano, anos = pa.map(l => 'Ano ' + l.ano);
+  const layout = obterLayoutBase('Qualidade do Modelo por Ano (R²)', { showlegend: false, yaxis: { range: [0, 1], gridcolor: cores.grade } });
+  return { data: [{ x: anos, y: pa.map(l => l.r2), type: 'bar', name: 'R²', marker: { color: cores.teal } }], layout, tipo: 'barras' };
+}
+function figCoef() {
+  const cores = obterCoresTema();
+  const pa = REG().por_ano, anos = pa.map(l => 'Ano ' + l.ano);
+  const ex = v => pa.map(l => { const it = (l.coeficientes || []).find(x => x.variavel === v); return it ? it.coef : null; });
+  const cE = ex('ebitda'), cC = ex('capex'), cD = ex('despfin');
+  const layout = obterLayoutBase('Sensibilidade do Caixa aos Determinantes', {
+    xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(cE.concat(cC, cD), 0.12), gridcolor: cores.grade }, legend: legendaTopo(cores)
+  });
+  const lin = (y, nome, cor) => ({ x: anos, y, name: nome, mode: 'lines+markers', line: { color: cor, width: 2.5 }, marker: { size: 6, color: cor } });
+  return { data: [lin(cE, 'EBITDA', cores.azul), lin(cC, 'CAPEX', cores.laranja), lin(cD, 'Desp. Fin.', cores.vermelho)], layout, tipo: 'linhas' };
+}
+function figRegIC() {
+  const cores = obterCoresTema();
+  const pa = REG().por_ano, anos = pa.map(l => 'Ano ' + l.ano);
+  const c = pa.map(l => l.coeficientes.find(x => x.variavel === 'ebitda'));
+  const layout = obterLayoutBase('Coeficiente do EBITDA por ano (IC 95%)', {
+    showlegend: false,
+    xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade },
+    yaxis: { range: faixa(c.flatMap(x => [x.ic_inf, x.ic_sup, 0, 1]), 0.1), title: 'R$ de caixa por R$ 1 de EBITDA', gridcolor: cores.grade },
+    shapes: [
+      { type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: cores.linhaZero, width: 1.5 } },
+      { type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 1, y1: 1, line: { color: cores.verde, width: 1.5, dash: 'dash' } }
+    ],
+    annotations: [{ xref: 'paper', x: 1, y: 1, text: 'lucro vira caixa 1 para 1', showarrow: false, xanchor: 'right', yanchor: 'bottom', font: { size: 10, color: cores.verde } }]
+  });
+  const data = [{ x: anos, y: c.map(x => x.coef), mode: 'markers', marker: { size: 8, color: cores.azul },
+    error_y: { type: 'data', symmetric: false, array: c.map(x => x.ic_sup - x.coef), arrayminus: c.map(x => x.coef - x.ic_inf), color: cores.azul, thickness: 1.5, width: 4 } }];
+  return { data, layout, tipo: 'estatico' };
+}
+function figRegRmse() {
+  const cores = obterCoresTema();
+  const r = REG().agrupado.rmse_por_ano, anos = r.map(x => 'Ano ' + x.ano);
+  const layout = obterLayoutBase('Erro do Modelo 3 em cada ano (RMSE, R$ mi)', {
+    showlegend: false, yaxis: { range: [0, faixa(r.map(x => x.rmse), 0.12)[1]], gridcolor: cores.grade }
+  });
+  return { data: [{ x: anos, y: r.map(x => x.rmse), type: 'bar', marker: { color: cores.roxo } }], layout, tipo: 'barras' };
+}
+function figDiagRes() {
+  const cores = obterCoresTema(), g = REG().diagnosticos.graficos;
+  const layout = obterLayoutBase('Resíduos × valores ajustados (Modelo 3)', {
+    showlegend: false, xaxis: { title: 'Valor ajustado (R$ mi)', gridcolor: cores.grade }, yaxis: { title: 'Resíduo (R$ mi)', gridcolor: cores.grade },
+    shapes: [{ type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 0, y1: 0, line: { color: cores.laranja, width: 1.5 } }]
+  });
+  return { data: [{ x: g.ajustados, y: g.residuos, mode: 'markers', marker: { size: 3, color: cores.azul, opacity: 0.35 } }], layout, tipo: 'estatico' };
+}
+function figDiagQQ() {
+  const cores = obterCoresTema(), g = REG().diagnosticos.graficos;
+  const x0 = g.qq_teorico[0], x1 = g.qq_teorico[g.qq_teorico.length - 1];
+  const [media, dp] = g.qq_reta;
+  const layout = obterLayoutBase('Gráfico Q-Q dos resíduos', {
+    showlegend: false, xaxis: { title: 'Quantis da normal', gridcolor: cores.grade }, yaxis: { title: 'Quantis dos resíduos (R$ mi)', gridcolor: cores.grade }
+  });
+  return { data: [
+    { x: g.qq_teorico, y: g.qq_amostra, mode: 'markers', marker: { size: 5, color: cores.azul } },
+    { x: [x0, x1], y: [media + dp * x0, media + dp * x1], mode: 'lines', line: { color: cores.laranja, width: 1.5 } }
+  ], layout, tipo: 'estatico' };
+}
+function figDiagHist() {
+  const cores = obterCoresTema(), g = REG().diagnosticos.graficos;
+  const layout = obterLayoutBase('Distribuição dos resíduos', {
+    showlegend: false, bargap: 0.02, xaxis: { title: 'Resíduo (R$ mi)', gridcolor: cores.grade }, yaxis: { title: 'Frequência', gridcolor: cores.grade }
+  });
+  return { data: [{ x: g.hist_x, y: g.hist_y, type: 'bar', marker: { color: cores.azul } }], layout, tipo: 'estatico' };
+}
+function figValid() {
+  const cores = obterCoresTema(), v = REG().validacao;
+  const todos = v.previsto.concat(v.observado);
+  const lim = [Math.min(...todos), Math.max(...todos)];
+  const layout = obterLayoutBase('Cenários de teste: observado × previsto', {
+    showlegend: false, xaxis: { title: 'Previsto (R$ mi)', gridcolor: cores.grade }, yaxis: { title: 'Observado (R$ mi)', gridcolor: cores.grade }
+  });
+  return { data: [
+    { x: v.previsto, y: v.observado, mode: 'markers', marker: { size: 3, color: cores.azul, opacity: 0.35 } },
+    { x: lim, y: lim, mode: 'lines', line: { color: cores.laranja, width: 1.5 } }
+  ], layout, tipo: 'estatico' };
+}
+
+// Figuras originais do painel, na versão final (usadas pelo PDF)
+function figEvolucao() {
+  const cores = obterCoresTema(), t = resultado.por_ano, anos = t.map(l => 'Ano ' + l.ano);
+  const e = t.map(l => l.ebitda), c = t.map(l => l.caixa);
+  const lin = (y, nome, cor) => ({ x: anos, y, name: nome, mode: 'lines+markers', line: { color: cor, width: 3 }, marker: { size: 7, color: cor } });
+  const layout = obterLayoutBase('Evolução das Médias (EBITDA vs Caixa)', {
+    xaxis: { categoryorder: 'array', categoryarray: anos, gridcolor: cores.grade }, yaxis: { range: faixa(e.concat(c), 0.12), gridcolor: cores.grade }, legend: legendaTopo(cores)
+  });
+  return { data: [lin(e, 'EBITDA', cores.azul), lin(c, 'Caixa', cores.laranja)], layout };
+}
+function figConversao() {
+  const cores = obterCoresTema(), t = resultado.por_ano, anos = t.map(l => 'Ano ' + l.ano), v = t.map(l => l.conversao);
+  const col = t.map(l => (l.conversao >= 0.5 ? cores.verde : (l.conversao >= 0 ? cores.laranja : cores.vermelho)));
+  const [mn, mx] = faixa(v.concat([0, 0.5]), 0.12);
+  const layout = obterLayoutBase('Índice de Conversão (Caixa / Lucro Líquido)', { yaxis: { title: 'Conversão', range: [mn, mx], gridcolor: cores.grade } });
+  return { data: [{ x: anos, y: v, type: 'bar', marker: { color: col } }], layout };
+}
+function figHist() {
+  const cores = obterCoresTema(), conta = $('filtro-conta').value, anoH = Number($('filtro-ano-hist').value);
+  const d = resultado.dados, vals = [];
+  for (let i = 0; i < d.n.length; i++) if (d.n[i] === anoH && d[conta] && tem(d[conta][i])) vals.push(d[conta][i]);
+  const nome = ROTULOS[conta] || conta;
+  const layout = obterLayoutBase(`Distribuição nos Cenários — ${nome} (Ano ${anoH})`, { bargap: 0.05, xaxis: { title: nome, gridcolor: cores.grade }, yaxis: { title: 'Frequência', gridcolor: cores.grade } });
+  return { data: [{ x: vals, type: 'histogram', marker: { color: cores.azul, line: { color: cores.grade, width: 1 } } }], layout };
+}
+function figBox() {
+  const cores = obterCoresTema(), conta = $('filtro-conta').value, d = resultado.dados, porA = {};
+  for (let i = 0; i < d.n.length; i++) { const v = d[conta] ? d[conta][i] : null; if (!tem(v)) continue; (porA[d.n[i]] = porA[d.n[i]] || []).push(v); }
+  const nome = ROTULOS[conta] || conta;
+  const layout = obterLayoutBase(`Variabilidade por Ano — ${nome}`, { showlegend: false, yaxis: { title: nome, gridcolor: cores.grade } });
+  return { data: Object.keys(porA).map(a => ({ y: porA[a], type: 'box', name: 'Ano ' + a, marker: { color: cores.azul }, line: { width: 1.5 } })), layout };
+}
+
+const FIGURAS_REG = [
+  ['g-reg-ic', figRegIC], ['g-reg-rmse', figRegRmse], ['g-diag-res', figDiagRes],
+  ['g-diag-qq', figDiagQQ], ['g-diag-hist', figDiagHist], ['g-valid', figValid]
+];
+
+function desenharDetalheRegressao(animar = true) {
+  const reg = REG();
+  if (!reg.por_ano.length) return;
+  $('reg-intro').innerHTML = htmlCartoes(cartoesIntroReg());
+  $('reg-glossario').innerHTML = GLOSSARIO_REG.map(([termo, txt]) => `<p><strong>${esc(termo)}.</strong> ${esc(txt)}</p>`).join('');
+  $('reg-resumo').innerHTML = htmlCartoes(cartoesResumoReg());
+  $('t-reg-ano').innerHTML = htmlTabela(tabelaRegPorAno());
+
+  const sel = $('filtro-ano-reg');
+  if (sel && !sel.options.length) {
+    reg.por_ano.forEach(l => { const o = document.createElement('option'); o.value = l.ano; o.textContent = 'Ano ' + l.ano; sel.appendChild(o); });
+    sel.value = reg.por_ano[reg.por_ano.length - 1].ano;
+    sel.onchange = () => desenharDetalheAnoReg();
+  }
+  desenharDetalheAnoReg();
+
+  const temAg = !!reg.agrupado;
+  ['bloco-modelo3', 'bloco-diagnostico', 'bloco-validacao'].forEach(id => $(id).classList.toggle('oculto', !temAg));
+  if (temAg) {
+    $('t-agrupado').innerHTML = htmlTabela(tabelaModelo3());
+    $('t-r2-modelo3').innerHTML = htmlTabela(tabelaR2Modelo3());
+    $('t-vif').innerHTML = htmlTabela(tabelaVif());
+    $('leitura-modelo3').innerHTML = htmlCartoes(cartoesModelo3());
+    $('t-diag').innerHTML = htmlTabela(tabelaDiagnosticos());
+    $('leitura-diag').innerHTML = htmlCartoes(cartoesDiagnosticos());
+  }
+  const temVal = !!reg.validacao;
+  $('bloco-validacao').classList.toggle('oculto', !temVal);
+  if (temVal) {
+    $('t-valid').innerHTML = htmlTabela(tabelaValidacao());
+    $('leitura-valid').innerHTML = htmlCartoes(cartoesValidacao());
+  }
+  $('bloco-ano12').classList.toggle('oculto', !reg.ano12.length);
+  if (reg.ano12.length) $('t-ano12').innerHTML = htmlTabela(tabelaAno12());
+  $('t-variacao').innerHTML = htmlTabela(tabelaVariacao());
+  $('leitura-limites').innerHTML = htmlCartoes(cartoesLimitacoes());
+
+  FIGURAS_REG.forEach(([id, fn]) => {
+    const ok = (id === 'g-reg-ic') || (id === 'g-valid' ? temVal : temAg);
+    $(id).classList.toggle('oculto', !ok);
+    if (ok) plotarFig(id, fn(), animar);
+  });
+}
+
+function desenharDetalheAnoReg() {
+  const ano = $('filtro-ano-reg').value;
+  $('t-reg-detalhe').innerHTML = htmlTabela(tabelaDetalheAno(ano));
+  $('leitura-ano-reg').innerHTML = htmlCartoes(cartoesAnoReg(ano));
+}
+
+/* ======================================================================
+   EXPORTAÇÃO PARA PDF (gerado inteiramente no navegador)
+   ====================================================================== */
+const COR_PDF = {
+  azul: [82, 103, 197], texto: [42, 37, 52], suave: [84, 79, 94], linha: [196, 186, 189],
+  bom: [159, 193, 82], atencao: [224, 115, 70], ruim: [198, 82, 78], info: [82, 103, 197], neutro: [168, 163, 179],
+  fundo: { bom: [240, 246, 227], atencao: [251, 237, 230], ruim: [248, 232, 231], info: [233, 227, 243] }
+};
+
+// Fontes padrão do PDF só desenham Latin-1: troca símbolos fora dele
+function limparPdf(t) {
+  return String(t)
+    .replace(/[−–—]/g, '-').replace(/[“”]/g, '"').replace(/[‘’]/g, "'").replace(/…/g, '...')
+    .replace(/≥/g, '>=').replace(/≤/g, '<=').replace(/≈/g, '~').replace(/→/g, '->').replace(/✓/g, 'OK').replace(/✕/g, 'X').replace(/⚡/g, '').replace(/²/g, '2').replace(/³/g, '3')
+    .replace(/[^\x00-\xFF]/g, '');
+}
+
+function criarPdf() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait', compress: true });
+  const M = { x: 14, topo: 20, base: 283, w: 182 };
+  const P = { doc, y: M.topo, M };
+
+  P.nova = () => { doc.addPage(); P.y = M.topo; };
+  P.garantir = h => { if (P.y + h > M.base) P.nova(); };
+  P.texto = (t, { tam = 9.5, estilo = 'normal', cor = COR_PDF.texto, x = M.x, largura = M.w, entre = 1.8 } = {}) => {
+    doc.setFont('helvetica', estilo); doc.setFontSize(tam); doc.setTextColor(...cor);
+    const lh = tam * 0.4;
+    String(t).split('\n').forEach(par => {
+      let linhas = doc.splitTextToSize(limparPdf(par), largura);
+      while (linhas.length) {
+        const cabem = Math.max(1, Math.floor((M.base - P.y) / lh));
+        if (linhas.length > cabem && cabem < 2) { P.nova(); continue; }
+        const parte = linhas.slice(0, cabem);
+        linhas = linhas.slice(cabem);
+        doc.text(parte, x, P.y + lh * 0.8);
+        P.y += parte.length * lh;
+        if (linhas.length) P.nova();
+      }
+      P.y += entre;
+    });
+  };
+  P.titulo = (t, nivel = 1) => {
+    P.garantir(nivel === 1 ? 16 : 11);
+    if (nivel === 1) {
+      P.y += 3;
+      doc.setFillColor(...COR_PDF.azul); doc.rect(M.x, P.y, M.w, 8, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(255, 255, 255);
+      doc.text(limparPdf(t), M.x + 3, P.y + 5.6);
+      P.y += 12;
+    } else {
+      P.texto(t, { tam: 10.5, estilo: 'bold', cor: COR_PDF.azul, entre: 1.2 });
+    }
+  };
+  P.cartao = (c) => {
+    const tipo = c.tipo || 'info', tam = 9, lh = tam * 0.4;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(tam);
+    const corpo = String(c.texto).split('\n').flatMap(par => doc.splitTextToSize(limparPdf(par), M.w - 8).concat(['']));
+    corpo.pop();
+    const altura = 5 + 5 + corpo.length * lh + 3;
+    if (altura > M.base - M.topo) { P.texto(c.titulo, { estilo: 'bold' }); P.texto(c.texto, { tam: 9 }); return; }
+    P.garantir(altura);
+    doc.setFillColor(...COR_PDF.fundo[tipo]); doc.rect(M.x, P.y, M.w, altura, 'F');
+    doc.setFillColor(...COR_PDF[tipo]); doc.rect(M.x, P.y, 1.4, altura, 'F');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...COR_PDF.texto);
+    doc.text(limparPdf(c.titulo), M.x + 5, P.y + 5.2);
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(tam);
+    doc.text(corpo, M.x + 5, P.y + 10.2 + lh * 0.3, { lineHeightFactor: 1.15 });
+    P.y += altura + 3;
+  };
+  P.cartoes = lista => lista.forEach(P.cartao);
+  P.tabela = (t, opcoes = {}) => {
+    if (!t.cab || !t.cab.length) return;
+    const txt = new Set(t.txt || []);
+    const colunas = {};
+    t.cab.forEach((_, i) => { colunas[i] = { halign: i === 0 || txt.has(i) ? 'left' : 'right' }; });
+    doc.autoTable({
+      startY: P.y, head: [t.cab.map(limparPdf)], body: t.linhas.map(l => l.map(c => (c && c.content !== undefined ? { ...c, content: limparPdf(c.content) } : limparPdf(c)))),
+      theme: 'grid', margin: { left: M.x, right: M.x, top: M.topo, bottom: 14 },
+      styles: { font: 'helvetica', fontSize: opcoes.fonte || 7.5, cellPadding: 1.4, textColor: COR_PDF.texto, lineColor: COR_PDF.linha, lineWidth: 0.1, overflow: 'linebreak' },
+      headStyles: { fillColor: COR_PDF.azul, textColor: 255, halign: 'right', fontStyle: 'bold' },
+      columnStyles: colunas, didParseCell: opcoes.aoCelula
+    });
+    P.y = doc.lastAutoTable.finalY + 5;
+  };
+  P.imagem = (png, proporcao) => {
+    const h = M.w * proporcao;
+    P.garantir(h + 2);
+    doc.addImage(png, 'PNG', M.x, P.y, M.w, h, undefined, 'FAST');
+    P.y += h + 3;
+  };
+  return P;
+}
+
+async function imagemDaFigura(fn, w = 800, h = 440) {
+  const fig = comTemaClaro(() => {
+    const f = fn();
+    const layout = JSON.parse(JSON.stringify(f.layout));
+    delete layout.transition;
+    layout.paper_bgcolor = '#FFFFFF'; layout.plot_bgcolor = '#FFFFFF';
+    return { data: f.data, layout };
+  });
+  const png = await Plotly.toImage(fig, { format: 'png', width: w, height: h, scale: 1.6 });
+  return { png, proporcao: h / w };
+}
+
+const pausa = () => new Promise(r => setTimeout(r, 0));
+
+function tabelaMediasPorAno() {
+  const t = resultado.por_ano;
+  const f0 = v => fmt(v, 0);
+  return {
+    cab: ['Ano', 'Receita', 'EBITDA', 'Marg. EBITDA', 'Lucro líq.', 'Caixa', 'Conversão', 'CAPEX', 'Desp. fin.', 'Distrib.', 'Saldo final'],
+    linhas: t.map(l => [String(l.ano), f0(l.receita), f0(l.ebitda), fmtPct(l.margem_ebitda), f0(l.lucro_liquido), f0(l.caixa), fmt(l.conversao, 2), f0(l.capex), f0(l.despfin), f0(l.dist), f0(l.saldo_final)])
+  };
+}
+
+function tabelaMapaPdf() {
+  const anos = resultado.resumo.anos, porAno = {};
+  anos.forEach(a => { porAno[a] = avaliar(a); });
+  const ids = porAno[anos[0]].filter(i => !(resultado.campos_extras || []).some(c => c.id === i.id)).map(i => i.id);
+  const status = [];
+  const linhas = ids.map(id => {
+    const st = [];
+    const cel = anos.map(a => { const it = porAno[a].find(i => i.id === id); st.push(it.status); return it.status === 'bom' ? 'OK' : (it.status === 'ruim' ? 'X' : (it.status === 'neutro' ? '-' : '!')); });
+    status.push(st);
+    return [porAno[anos[0]].find(i => i.id === id).nome].concat(cel);
+  });
+  return { cab: ['Indicador'].concat(anos.map(String)), linhas, status };
+}
+
+async function exportarPdf() {
+  const btn = $('btn-exportar-pdf'), st = $('status-pdf'), barra = $('progresso-pdf');
+  if (!resultado) return;
+  if (!window.jspdf || !window.Plotly) { st.textContent = 'Biblioteca de PDF não carregada. Verifique a conexão e recarregue a página.'; st.className = 'nota erro'; return; }
+  btn.disabled = true; barra.style.display = 'block'; st.className = 'nota';
+  try {
+    const P = criarPdf();
+    const regOk = resultado.regressoes && resultado.regressoes.por_ano.length;
+    let feitas = 0;
+    const total = 8 + (indicesDisponiveis() ? 6 : 0) + (regOk ? 8 : 0);
+    const passo = async (msg) => { st.textContent = `${msg} (${Math.min(++feitas, total)}/${total})`; await pausa(); };
+    const grafico = async (fn, msg, w, h) => {
+      await passo(msg);
+      try { const img = await imagemDaFigura(fn, w, h); P.imagem(img.png, img.proporcao); }
+      catch (e) { P.texto('(gráfico indisponível: ' + e.message + ')', { cor: COR_PDF.suave }); }
+    };
+
+    // Capa
+    const agora = new Date();
+    P.y = 28;
+    P.texto('DataCore', { tam: 26, estilo: 'bold', cor: COR_PDF.azul, entre: 0 });
+    P.texto('Relatório da simulação CTI Global', { tam: 15, estilo: 'bold', entre: 3 });
+    const r = resultado.resumo;
+    P.texto(`Análise de ${fmt(r.observacoes, 0)} observações: ${fmt(r.cenarios, 0)} cenários simulados × ${r.anos.length} anos. Valores em R$ milhões, salvo indicação.`, { tam: 10, cor: COR_PDF.suave });
+    P.texto(`Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}. O arquivo de dados é processado no seu navegador e não é enviado a nenhum servidor.`, { tam: 9, cor: COR_PDF.suave, entre: 5 });
+    if (indicesDisponiveis()) P.texto(`Parâmetro dos índices de valor econômico: WACC de ${fmt(wacc * 100, 1)}% ao ano.`, { tam: 9, cor: COR_PDF.suave });
+
+    // 1. Conclusões e visão geral
+    await passo('Montando conclusões');
+    P.titulo('1. O que os dados dizem');
+    P.cartoes(gerarAchados().map(a => ({ tipo: a.tipo, titulo: a.titulo, texto: a.texto })));
+    P.titulo('2. Médias por ano (R$ milhões)');
+    P.tabela(tabelaMediasPorAno(), { fonte: 7 });
+    P.titulo('3. Mapa de saúde: todos os anos', 1);
+    P.texto('OK = melhorou ou cumpre o critério; ! = atenção; X = problema; - = sem base de comparação.', { tam: 8.5, cor: COR_PDF.suave });
+    const mapa = tabelaMapaPdf();
+    P.tabela(mapa, { fonte: 7, aoCelula: d => {
+      if (d.section !== 'body' || d.column.index === 0) return;
+      const s = mapa.status[d.row.index][d.column.index - 1];
+      d.cell.styles.fillColor = COR_PDF[s] || COR_PDF.neutro; d.cell.styles.textColor = 255; d.cell.styles.halign = 'center'; d.cell.styles.fontStyle = 'bold';
+    } });
+
+    // Lucro versus caixa e distribuição
+    P.titulo('4. Lucro versus caixa');
+    await grafico(figEvolucao, 'Gráfico de evolução');
+    await grafico(figConversao, 'Gráfico de conversão');
+    P.titulo('5. Distribuição entre os cenários');
+    P.texto(`Conta: ${ROTULOS[$('filtro-conta').value] || $('filtro-conta').value}; histograma do Ano ${$('filtro-ano-hist').value} (selecionados na tela).`, { tam: 8.5, cor: COR_PDF.suave });
+    await grafico(figHist, 'Histograma');
+    await grafico(figBox, 'Boxplot');
+    P.tabela({ cab: ['Conta', 'Média', 'Mediana', 'Desvio', 'Outliers'], linhas: resultado.descritivas.map(l => [ROTULOS[l.conta] || l.conta, fmt(l.media, 1), fmt(l.mediana, 1), fmt(l.desvio, 1), l.pct_outliers + '%']) });
+
+    // Índices
+    if (indicesDisponiveis()) {
+      P.titulo('6. Índices financeiros');
+      const t = tabelaIndices();
+      P.tabela({ cab: t.cab, linhas: t.corpo.map(l => l.grupo ? [{ content: l.grupo, colSpan: t.cab.length, styles: { fillColor: [243, 240, 246], fontStyle: 'bold', halign: 'left', textColor: COR_PDF.azul } }] : [l.nome].concat(l.celulas)) }, { fonte: 6.6 });
+      notasIndices().forEach(n => P.texto(n, { tam: 8, cor: COR_PDF.suave, entre: 1.2 }));
+      P.y += 3;
+      for (const [id, fn, ids] of FIGURAS_INDICES) {
+        if (figuraIndiceDisponivel(ids)) await grafico(fn, 'Gráfico de índices');
+      }
+      P.cartoes(cartoesIndices());
+    }
+
+    // Regressões
+    if (regOk) {
+      const reg = REG();
+      P.titulo('7. Regressões: determinantes da geração de caixa');
+      P.cartoes(cartoesIntroReg());
+      P.titulo('Como ler os resultados', 2);
+      GLOSSARIO_REG.forEach(([termo, txt]) => P.texto(`${termo}. ${txt}`, { tam: 8.5, entre: 1.6 }));
+      P.titulo('Resumo em linguagem simples', 2);
+      P.cartoes(cartoesResumoReg());
+      P.titulo('Modelos por ano', 2);
+      await grafico(figR2, 'Gráfico de R²');
+      await grafico(figCoef, 'Gráfico de coeficientes');
+      await grafico(figRegIC, 'Gráfico com intervalos de confiança');
+      P.tabela(tabelaRegPorAno(), { fonte: 7 });
+      const sel = $('filtro-ano-reg').value;
+      P.titulo(`Detalhe do Ano ${sel} (selecionado na tela)`, 2);
+      P.tabela(tabelaDetalheAno(sel));
+      P.cartoes(cartoesAnoReg(sel));
+      if (reg.agrupado) {
+        P.titulo('Modelo 3: anos 1 a 11 juntos', 2);
+        P.tabela(tabelaModelo3());
+        P.tabela(tabelaR2Modelo3());
+        P.tabela(tabelaVif());
+        P.cartoes(cartoesModelo3());
+        await grafico(figRegRmse, 'Gráfico de RMSE por ano');
+        P.titulo('Diagnóstico dos resíduos', 2);
+        P.tabela(tabelaDiagnosticos());
+        P.cartoes(cartoesDiagnosticos());
+        await grafico(figDiagRes, 'Resíduos');
+        await grafico(figDiagQQ, 'Gráfico Q-Q');
+        await grafico(figDiagHist, 'Histograma dos resíduos');
+      }
+      if (reg.validacao) {
+        P.titulo('Validação em cenários novos', 2);
+        P.tabela(tabelaValidacao());
+        P.cartoes(cartoesValidacao());
+        await grafico(figValid, 'Validação');
+      }
+      if (reg.ano12.length) { P.titulo(`Ano ${ANO_ENCERRAMENTO} e anos com distribuição variável`, 2); P.tabela(tabelaAno12()); }
+      P.titulo('Quanto cada variável varia entre cenários (coeficiente de variação)', 2);
+      P.tabela(tabelaVariacao());
+      P.cartoes(cartoesLimitacoes());
+    }
+
+    // Cabeçalho e rodapé em todas as páginas
+    const n = P.doc.getNumberOfPages();
+    for (let i = 1; i <= n; i++) {
+      P.doc.setPage(i);
+      P.doc.setFont('helvetica', 'normal'); P.doc.setFontSize(8); P.doc.setTextColor(...COR_PDF.suave);
+      if (i > 1) P.doc.text('DataCore · Simulação CTI Global', 14, 10);
+      P.doc.text(`Página ${i} de ${n}`, 196, 290, { align: 'right' });
+    }
+    st.textContent = 'Salvando arquivo...'; await pausa();
+    P.doc.save(`DataCore_Relatorio_CTI_${agora.toISOString().slice(0, 10)}.pdf`);
+    st.textContent = `PDF gerado (${n} páginas).`; st.className = 'nota ok';
+  } catch (e) {
+    console.error(e);
+    st.textContent = 'Não foi possível gerar o PDF: ' + e.message; st.className = 'nota erro';
+  } finally { btn.disabled = false; barra.style.display = 'none'; }
+}
+
+configurarWacc();
+$('btn-exportar-pdf').onclick = exportarPdf;
 
 iniciar();
 </script>
