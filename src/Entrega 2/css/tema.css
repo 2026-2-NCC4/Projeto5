@@ -21,6 +21,11 @@
   --kpi-ruim-bg: rgba(198, 82, 78, 0.15);
   --sombra: 0 2px 10px rgba(42, 37, 52, 0.07);
   --sombra-hover: 0 6px 18px rgba(42, 37, 52, 0.12);
+  --tooltip-bg: #2A2534;
+  --tooltip-texto: #FFFFFF;
+  --tooltip-borda: #423C4F;
+  --tooltip-code-bg: rgba(255, 255, 255, 0.16);
+  --tooltip-code-texto: #FFFFFF;
 }
 
 [data-tema="escuro"] {
@@ -46,6 +51,11 @@
   --kpi-ruim-bg: rgba(198, 82, 78, 0.18);
   --sombra: 0 2px 12px rgba(0, 0, 0, 0.35);
   --sombra-hover: 0 6px 20px rgba(0, 0, 0, 0.5);
+  --tooltip-bg: #14111D;
+  --tooltip-texto: #F3F0F6;
+  --tooltip-borda: rgba(82, 103, 197, 0.6);
+  --tooltip-code-bg: rgba(82, 103, 197, 0.35);
+  --tooltip-code-texto: #C7D2FE;
 }
 
 * { box-sizing: border-box; }
