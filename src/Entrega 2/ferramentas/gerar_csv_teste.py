@@ -36,7 +36,18 @@ for ano in range(1, 13):
             'FLU - Despesas Financeiras': despfin,
             'FLU - Distribuição para Acionista': dist,
             'FLU - Saldo Final': 1e9 + caixa,
-            'BAL - Total do Ativo': 1e10,
+            'BAL - Ativo Circulante': 1.5e9 + rng.normal(0, 1e7),
+            'BAL - Passivo Circulante': -1.1e9,
+            'BAL - Disponível': 6e8,
+            'BAL - Estoques Diversos': 1.2e8,
+            'BAL - Realizável a Longo Prazo': 8e8,
+            'BAL - Exigível a Longo Prazo': -3.2e9,
+            'BAL - Patrimônio Líquido': -4.5e9,
+            'BAL - Permanente': 6.5e9,
+            'BAL - Total do Ativo': 8.8e9,
+            'BAL - Empréstimos': -2.5e9,
+            'DRE - Imposto de Renda e Contribuição Social': -0.12 * receita,
+            'DRE - Resultado Antes do Imposto de Renda': 0.48 * receita,
         }
         linhas.append(f'Ano {ano};{cen};;0,025138815')
         for conta, valor in valores.items():

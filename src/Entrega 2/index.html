@@ -1082,15 +1082,15 @@ details.glossario p { margin: 8px 0 0; font-size: 0.9rem; }
 
       <section id="s-indices">
         <h2>7. Índices financeiros</h2>
-        <div class="filtros">
+        <div class="filtros" id="filtros-wacc">
           <label>WACC (custo de capital) <input type="text" id="entrada-wacc" class="entrada-curta" inputmode="decimal" value="8,0"> % ao ano</label>
           <button class="acao secundario" id="btn-wacc-padrao" type="button">Restaurar 8,0%</button>
           <span class="nota">Altera EVA, EVA / Capital Investido e MVA.</span>
         </div>
-        <div id="aviso-indices"></div>
-        <div style="overflow-x:auto"><table id="t-indices"></table></div>
+        <div id="aviso-indices" class="oculto"></div>
+        <div style="overflow-x:auto" id="wrap-t-indices"><table id="t-indices"></table></div>
         <div class="nota" id="nota-indices"></div>
-        <div class="grade" style="margin-top:16px">
+        <div class="grade" id="grade-indices" style="margin-top:16px">
           <div id="g-idx-ebitda" class="grafico"></div>
           <div id="g-idx-liquidez" class="grafico"></div>
           <div id="g-idx-endiv" class="grafico"></div>
@@ -1098,7 +1098,7 @@ details.glossario p { margin: 8px 0 0; font-size: 0.9rem; }
           <div id="g-idx-eva" class="grafico"></div>
           <div id="g-idx-capital" class="grafico"></div>
         </div>
-        <h3 class="sub">O que cada grupo de índices significa</h3>
+        <h3 class="sub" id="sub-leitura-indices">O que cada grupo de índices significa</h3>
         <div id="leitura-indices"></div>
       </section>
 
@@ -1743,138 +1743,108 @@ const CONTAS_SISTEMA = [
   {
     id: 'ativo_circulante', nome: 'Ativo Circulante', obrigatoria: false,
     sinonimos: [
-      'BAL - Ativo Circulante',
-      'Ativo Circulante',
-      'Total do Ativo Circulante',
-      'Current Assets',
-      'Total Current Assets'
+      'BAL - Ativo Circulante', 'Ativo Circulante', 'Total do Ativo Circulante',
+      'Ativo Circulante Total', 'Ativo Corrente', 'Current Assets', 'Total Current Assets'
     ],
     exclusoes: ['nao circulante', 'passivo']
   },
   {
     id: 'passivo_circulante', nome: 'Passivo Circulante', obrigatoria: false,
     sinonimos: [
-      'BAL - Passivo Circulante',
-      'Passivo Circulante',
-      'Total do Passivo Circulante',
-      'Current Liabilities',
-      'Total Current Liabilities'
+      'BAL - Passivo Circulante', 'Passivo Circulante', 'Total do Passivo Circulante',
+      'Passivo Circulante Total', 'Passivo Corrente', 'Passivo de Curto Prazo',
+      'Current Liabilities', 'Total Current Liabilities'
     ],
     exclusoes: ['nao circulante', 'ativo circulante']
   },
   {
     id: 'disponivel', nome: 'Disponível (Caixa e Bancos)', obrigatoria: false,
     sinonimos: [
-      'BAL - Disponível',
-      'Disponível',
-      'Disponibilidades',
-      'Caixa e Equivalentes de Caixa',
-      'Caixa e Bancos',
-      'Cash and Cash Equivalents',
-      'Cash'
+      'BAL - Disponível', 'Disponível', 'Disponibilidades', 'Caixa e Equivalentes de Caixa',
+      'Caixa e Equivalentes', 'Caixa e Bancos', 'Cash and Cash Equivalents', 'Cash',
+      'Disponibilidades Financeiras', 'Recursos Disponíveis', 'Aplicações Financeiras',
+      'Disponibilidades e Aplicações'
     ],
     exclusoes: ['saldo', 'final', 'flu -', 'dre -']
   },
   {
     id: 'estoques', nome: 'Estoques', obrigatoria: false,
     sinonimos: [
-      'BAL - Estoques Diversos',
-      'Estoques',
-      'Estoque',
-      'Inventories',
-      'Inventory'
+      'BAL - Estoques Diversos', 'Estoques', 'Estoque', 'Inventories', 'Inventory',
+      'Almoxarifado', 'Mercadorias', 'Produtos Acabados', 'Materiais e Suprimentos'
     ],
     exclusoes: ['provisao']
   },
   {
     id: 'realizavel_lp', nome: 'Realizável a Longo Prazo', obrigatoria: false,
     sinonimos: [
-      'BAL - Realizável a Longo Prazo',
-      'Realizável a Longo Prazo',
-      'Ativo Realizável a Longo Prazo',
-      'Long Term Receivables'
+      'BAL - Realizável a Longo Prazo', 'Realizável a Longo Prazo', 'Realizavel a Longo Prazo',
+      'Realizável a LP', 'Realizavel LP', 'Ativo Realizável a Longo Prazo', 'Ativo Realizável a LP',
+      'Ativo Não Circulante Realizável', 'Long Term Receivables', 'BAL - Outros Créditos LP',
+      'Outros Créditos LP', 'Créditos de Longo Prazo'
     ],
     exclusoes: ['dre -', 'flu -']
   },
   {
     id: 'exigivel_lp', nome: 'Exigível a Longo Prazo', obrigatoria: false,
     sinonimos: [
-      'BAL - Exigível a Longo Prazo',
-      'Exigível a Longo Prazo',
-      'Passivo Não Circulante',
-      'Long Term Liabilities',
-      'Non-Current Liabilities'
+      'BAL - Exigível a Longo Prazo', 'Exigível a Longo Prazo', 'Exigivel a Longo Prazo',
+      'Exigível a LP', 'Exigivel LP', 'Passivo Não Circulante', 'Passivo Nao Circulante',
+      'Passivo de Longo Prazo', 'Long Term Liabilities', 'Non-Current Liabilities'
     ],
     exclusoes: ['realizavel', 'dre -', 'flu -']
   },
   {
     id: 'patrimonio_liquido', nome: 'Patrimônio Líquido', obrigatoria: false,
     sinonimos: [
-      'BAL - Patrimônio Líquido',
-      'Patrimônio Líquido',
-      'Total do Patrimônio Líquido',
-      'Shareholders Equity',
-      'Total Equity',
-      'Equity',
-      'PL'
+      'BAL - Patrimônio Líquido', 'BAL  - Patrimônio Líquido', 'Patrimônio Líquido',
+      'Patrimonio Liquido', 'Total do Patrimônio Líquido', 'Total do Patrimonio Liquido',
+      'Shareholders Equity', 'Total Equity', 'Equity', 'PL', 'Capital Próprio'
     ],
     exclusoes: ['dre -', 'flu -']
   },
   {
     id: 'ativo_permanente', nome: 'Ativo Permanente', obrigatoria: false,
     sinonimos: [
-      'BAL - Permanente',
-      'Ativo Permanente',
-      'Permanente',
-      'Fixed Assets'
+      'BAL - Permanente', 'Ativo Permanente', 'Permanente', 'Fixed Assets',
+      'Imobilizado', 'Ativo Imobilizado', 'BAL - Investimentos - Imobilizado',
+      'BAL - Investimentos - Intangível', 'Investimentos - Imobilizado', 'Ativo Fixo'
     ],
     exclusoes: ['depreciacao', 'amortizacao', 'acumulad', 'dre -', 'flu -']
   },
   {
     id: 'total_ativo', nome: 'Total do Ativo', obrigatoria: false,
     sinonimos: [
-      'BAL - Total do Ativo',
-      'Total do Ativo',
-      'Ativo Total',
-      'Total Assets'
+      'BAL - Total do Ativo', 'Total do Ativo', 'Ativo Total', 'Total Ativo',
+      'Total Assets', 'Soma do Ativo'
     ],
     exclusoes: ['passivo', 'dre -', 'flu -']
   },
   {
     id: 'emprestimos', nome: 'Empréstimos', obrigatoria: false,
     sinonimos: [
-      'BAL - Empréstimos',
-      'Empréstimos',
-      'Empréstimos e Financiamentos',
-      'Financiamentos',
-      'Dívida Bruta',
-      'Loans',
-      'Borrowings'
+      'BAL - Empréstimos', 'BAL - Emprést', 'Empréstimos', 'Emprést', 'Emprestimos',
+      'Empréstimos e Financiamentos', 'Financiamentos', 'Financiamentos e Empréstimos',
+      'Dívida Bruta', 'Divida Bruta', 'Loans', 'Borrowings', 'Debêntures', 'Debentures'
     ],
     exclusoes: ['dre -', 'flu -']
   },
   {
     id: 'imposto_renda', nome: 'Imposto de Renda e CSLL', obrigatoria: false,
     sinonimos: [
-      'DRE - Imposto de Renda e Contribuição Social',
-      'Imposto de Renda e Contribuição Social',
-      'IRPJ e CSLL',
-      'Imposto de Renda',
-      'Provisão para IR e CSLL',
-      'Income Tax'
+      'DRE - Imposto de Renda e Contribuição Social', 'Imposto de Renda e Contribuição Social',
+      'IRPJ e CSLL', 'IR e CSLL', 'Imposto de Renda', 'Provisão para IR e CSLL',
+      'Impostos sobre o Lucro', 'Tributos sobre o Lucro', 'Income Tax'
     ],
     exclusoes: ['antes do', 'resultado', 'liquido', 'flu -']
   },
   {
     id: 'resultado_antes_ir', nome: 'Resultado Antes do IR', obrigatoria: false,
     sinonimos: [
-      'DRE - Resultado Antes do Imposto de Renda',
-      'Resultado Antes do Imposto de Renda',
-      'Resultado Antes dos Impostos',
-      'Lucro Antes do Imposto de Renda',
-      'LAIR',
-      'Earnings Before Tax',
-      'EBT'
+      'DRE - Resultado Antes do Imposto de Renda', 'Resultado Antes do Imposto de Renda',
+      'Resultado Antes dos Impostos', 'Resultado Antes do IR', 'Lucro Antes do Imposto de Renda',
+      'Lucro Antes do IR', 'LAIR', 'Lucro Antes dos Tributos', 'Resultado Antes dos Tributos',
+      'Earnings Before Tax', 'EBT'
     ],
     exclusoes: ['liquido', 'flu -']
   }
@@ -1939,12 +1909,15 @@ function autoMapearContasJS(contas) {
 }
 
 function obterMapeamentoAutomatico(contas) {
+  const mapaJS = autoMapearContasJS(contas);
+  let mapaPy = {};
   if (analise && typeof analise.sugerir_mapeamento === 'function') {
     try {
-      return JSON.parse(analise.sugerir_mapeamento(JSON.stringify(contas)));
+      const res = analise.sugerir_mapeamento(JSON.stringify(contas));
+      mapaPy = JSON.parse(res);
     } catch (_) {}
   }
-  return autoMapearContasJS(contas);
+  return { ...mapaJS, ...mapaPy };
 }
 
 async function iniciar() {
@@ -1952,9 +1925,9 @@ async function iniciar() {
     carregando(true); status('Carregando Python...');
     pyodide = await loadPyodide({ indexURL: PYODIDE_URL });
     await pyodide.loadPackage(['numpy', 'pandas']);
-    const codigo = await (await fetch('python/analise.py')).text();
+    const codigo = await (await fetch('python/analise.py?v=' + Date.now(), { cache: 'no-store' })).text();
     pyodide.FS.writeFile('/tmp/analise.py', codigo);
-    pyodide.runPython("import sys; sys.path.insert(0, '/tmp')");
+    pyodide.runPython("import sys; sys.modules.pop('analise', None); sys.path.insert(0, '/tmp')");
     analise = pyodide.pyimport('analise');
     $('arquivo').disabled = false; status('Pronto.', 'ok');
   } catch (e) { status('Erro: ' + e.message, 'erro'); }
@@ -1963,12 +1936,18 @@ async function iniciar() {
 
 $('arquivo').onchange = async e => {
   const arquivo = e.target.files[0]; if (!arquivo) return;
-  carregando(true); status('Lendo arquivo e mapeando contas automaticamente...');
-  const buffer = new Uint8Array(await arquivo.arrayBuffer());
-  pyodide.FS.writeFile('/tmp/dados.csv', buffer);
-  contasArquivo = analise.listar_contas_arquivo('/tmp/dados.csv').toJs();
-  exibirMapeamento(contasArquivo);
-  carregando(false);
+  try {
+    carregando(true); status('Lendo arquivo e mapeando contas automaticamente...');
+    const buffer = new Uint8Array(await arquivo.arrayBuffer());
+    pyodide.FS.writeFile('/tmp/dados.csv', buffer);
+    contasArquivo = analise.listar_contas_arquivo('/tmp/dados.csv').toJs();
+    exibirMapeamento(contasArquivo);
+  } catch (err) {
+    status('Erro ao ler arquivo: ' + err.message, 'erro');
+    console.error(err);
+  } finally {
+    carregando(false);
+  }
 };
 
 function normalizarIdentificadorConta(conta) {
@@ -2530,16 +2509,19 @@ function limparMapaTimeouts() {
 function desenharMapa(animar = true) {
   limparMapaTimeouts();
   const anos = resultado.resumo.anos;
-  const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'].concat(itensIndicesAno(anos[0]).map(i => i.id));
+  const idsIndices = indicesDisponiveis() ? itensIndicesAno(anos[0]).map(i => i.id) : [];
+  const ids = ['receita', 'ebitda', 'caixa', 'conversao', 'risco'].concat(idsIndices);
   const porAno = {}; anos.forEach(a => { porAno[a] = avaliar(a); });
 
   const classeAnim = animar ? 'animar-entrada-linha' : '';
 
   let html = `<tr class="${classeAnim}"><th>Indicador</th>` + anos.map(a => `<th>${a}</th>`).join('') + '</tr>';
   ids.forEach(id => {
-    const nome = porAno[anos[0]].find(i => i.id === id).nome;
+    const itemRef = (porAno[anos[0]] || []).find(i => i.id === id);
+    if (!itemRef) return;
+    const nome = itemRef.nome;
     html += `<tr class="${classeAnim}"><td>${nome}</td>` + anos.map(a => {
-      const it = porAno[a].find(i => i.id === id);
+      const it = (porAno[a] || []).find(i => i.id === id) || { status: 'neutro', motivo: 'N/D' };
       return `<td class="c ${it.status}" title="${it.motivo}">${it.status === 'bom' ? '✓' : (it.status === 'ruim' ? '✕' : (it.status === 'neutro' ? '–' : '!'))}</td>`;
     }).join('') + '</tr>';
   });
@@ -3200,23 +3182,23 @@ function plotarFig(id, fig, animar) {
    ====================================================================== */
 const INDICES = [
   { id: 'ebitda', grupo: 'EBITDA', nome: 'EBITDA (R$ mi)', tipo: 'mi', kpi: false },
-  { id: 'margem_ebitda', nome: 'Margem EBITDA', tipo: 'pct', regra: 'alto' },
+  { id: 'margem_ebitda', grupo: 'EBITDA', nome: 'Margem EBITDA', tipo: 'pct', regra: 'alto' },
   { id: 'lc', grupo: 'Liquidez', nome: 'Liquidez Corrente (LC)', tipo: 'x', regra: 'liquidez', balanco: true },
-  { id: 'ls', nome: 'Liquidez Seca (LS)', tipo: 'x', regra: 'liquidez', balanco: true },
-  { id: 'li', nome: 'Liquidez Imediata (LI)', tipo: 'x', regra: 'liquidez', balanco: true },
-  { id: 'lg', nome: 'Liquidez Geral (LG)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'ls', grupo: 'Liquidez', nome: 'Liquidez Seca (LS)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'li', grupo: 'Liquidez', nome: 'Liquidez Imediata (LI)', tipo: 'x', regra: 'liquidez', balanco: true },
+  { id: 'lg', grupo: 'Liquidez', nome: 'Liquidez Geral (LG)', tipo: 'x', regra: 'liquidez', balanco: true },
   { id: 'pct', grupo: 'Endividamento', nome: 'Part. de Capital de Terceiros (PCT)', tipo: 'x', sufixo: 'x', regra: 'baixo', balanco: true },
-  { id: 'ce', nome: 'Composição do Endividamento (CE)', tipo: 'pct', regra: 'baixo', balanco: true },
-  { id: 'ipl', nome: 'Imobilização do PL (IPL)', tipo: 'x', sufixo: 'x', regra: 'baixo', balanco: true },
+  { id: 'ce', grupo: 'Endividamento', nome: 'Composição do Endividamento (CE)', tipo: 'pct', regra: 'baixo', balanco: true },
+  { id: 'ipl', grupo: 'Endividamento', nome: 'Imobilização do PL (IPL)', tipo: 'x', sufixo: 'x', regra: 'baixo', balanco: true },
   { id: 'roa', grupo: 'Rentabilidade', nome: 'ROA', tipo: 'pct', regra: 'alto', balanco: true },
-  { id: 'roe', nome: 'ROE', tipo: 'pct', regra: 'alto', balanco: true },
-  { id: 'margem_liquida', nome: 'Margem Líquida', tipo: 'pct', regra: 'alto' },
-  { id: 'margem_operacional', nome: 'Margem Operacional', tipo: 'pct', regra: 'alto' },
+  { id: 'roe', grupo: 'Rentabilidade', nome: 'ROE', tipo: 'pct', regra: 'alto', balanco: true },
+  { id: 'margem_liquida', grupo: 'Rentabilidade', nome: 'Margem Líquida', tipo: 'pct', regra: 'alto' },
+  { id: 'margem_operacional', grupo: 'Rentabilidade', nome: 'Margem Operacional', tipo: 'pct', regra: 'alto' },
   { id: 'nopat', grupo: 'Valor econômico', nome: 'NOPAT (R$ mi)', tipo: 'mi', regra: 'alto' },
-  { id: 'capital_investido', nome: 'Capital Investido (R$ mi)', tipo: 'mi', kpi: false, balanco: true },
-  { id: 'eva', nome: 'EVA (R$ mi)', tipo: 'mi', regra: 'sinal', balanco: true },
-  { id: 'eva_ci', nome: 'EVA / Capital Investido', tipo: 'pct', regra: 'alto', balanco: true },
-  { id: 'mva', nome: 'MVA aproximado (R$ mi)', tipo: 'mi', regra: 'alto', balanco: true },
+  { id: 'capital_investido', grupo: 'Valor econômico', nome: 'Capital Investido (R$ mi)', tipo: 'mi', kpi: false, balanco: true },
+  { id: 'eva', grupo: 'Valor econômico', nome: 'EVA (R$ mi)', tipo: 'mi', regra: 'sinal', balanco: true },
+  { id: 'eva_ci', grupo: 'Valor econômico', nome: 'EVA / Capital Investido', tipo: 'pct', regra: 'alto', balanco: true },
+  { id: 'mva', grupo: 'Valor econômico', nome: 'MVA aproximado (R$ mi)', tipo: 'mi', regra: 'alto', balanco: true },
 ];
 Object.assign(ROTULOS, {
   margem_ebitda: 'Margem EBITDA', ativo_circulante: 'Ativo circulante', passivo_circulante: 'Passivo circulante',
@@ -3226,13 +3208,9 @@ Object.assign(ROTULOS, {
   imposto_renda: 'Imposto de renda e CSLL', resultado_antes_ir: 'Resultado antes do IR'
 });
 
-function indicesDisponiveis() {
-  return !!(resultado && resultado.indices && resultado.indices.por_ano && resultado.indices.por_ano.length);
-}
-
 // Linha de índices de um ano; EVA, EVA/CI e MVA são recalculados com o WACC da tela
 function linhaIndices(ano) {
-  if (!indicesDisponiveis()) return null;
+  if (!resultado || !resultado.indices || !resultado.indices.por_ano) return null;
   const base = resultado.indices.por_ano.find(l => l.ano === Number(ano));
   if (!base) return null;
   const l = { ...base };
@@ -3243,15 +3221,27 @@ function linhaIndices(ano) {
   } else { l.eva = null; l.eva_ci = null; l.mva = null; }
   return l;
 }
-const indicesPorAno = () => indicesDisponiveis() ? resultado.indices.por_ano.map(l => linhaIndices(l.ano)) : [];
+const indicesPorAno = () => (resultado && resultado.indices && resultado.indices.por_ano)
+  ? resultado.indices.por_ano.map(l => linhaIndices(l.ano))
+  : [];
 
 function valorIdx(def, l) {
-  if (!l) return null;
+  if (!def || !l) return null;
   if (def.id === 'roa' && l.roa_nc) return null;
   return tem(l[def.id]) ? l[def.id] : null;
 }
-function idxTemDados(def) { return indicesPorAno().some(l => valorIdx(def, l) !== null || (def.id === 'roa' && l.roa_nc)); }
+function idxTemDados(def) {
+  if (!def) return false;
+  return indicesPorAno().some(l => valorIdx(def, l) !== null || (def.id === 'roa' && l.roa_nc));
+}
 const indicesAtivos = () => INDICES.filter(idxTemDados);
+
+function indicesDisponiveis() {
+  if (!resultado || !resultado.indices || !resultado.indices.por_ano || !resultado.indices.por_ano.length) {
+    return false;
+  }
+  return INDICES.some(d => d.balanco && idxTemDados(d));
+}
 
 function fmtIdx(def, l) {
   if (def.id === 'roa' && l && l.roa_nc) return 'n/c';
@@ -3289,7 +3279,9 @@ function avaliarIndice(def, ano, l, lAnt) {
 function itensIndicesAno(ano) {
   if (!indicesDisponiveis()) return [];
   const l = linhaIndices(ano), lAnt = linhaIndices(Number(ano) - 1);
-  return indicesAtivos().filter(d => d.kpi !== false).map(d => avaliarIndice(d, ano, l, lAnt));
+  return indicesAtivos()
+    .filter(d => d.kpi !== false && d.balanco && valorIdx(d, l) !== null)
+    .map(d => avaliarIndice(d, ano, l, lAnt));
 }
 
 function tabelaIndices() {
@@ -3308,13 +3300,21 @@ function tabelaIndices() {
 
 function notasIndices() {
   const notas = [
-    'Cada índice usa a média dos cenários de cada ano (razão das médias), como no relatório de Contabilidade e Finanças.',
-    'Passivo circulante, exigível a longo prazo, patrimônio líquido e empréstimos vêm com sinal negativo no arquivo (natureza credora); os índices usam o valor absoluto da média.',
-    `NOPAT = Resultado operacional × (1 − alíquota). Alíquota: ${resultado.indices.origem_aliquota}. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido. MVA aproximado = EVA ÷ WACC (perpetuidade).`,
-    'Liquidez seca: estoques ausentes em um ano são tratados como zero.'
+    'Cada índice usa a média dos cenários de cada ano (razão das médias), como no relatório de Contabilidade e Finanças.'
   ];
-  if (resultado.resumo.anos.includes(ANO_ENCERRAMENTO)) {
-    notas.push(`Ano ${ANO_ENCERRAMENTO} (encerramento da concessão): contas como patrimônio líquido e exigível a longo prazo deixam de existir, então LG, PCT, CE, IPL, ROE, EVA e MVA ficam N/D. O ROA aparece como n/c (não comparável) porque o total do ativo é quase zero. Os demais valores desse ano não são comparáveis aos anos 1 a ${ANO_ENCERRAMENTO - 1}.`);
+  const temCredores = ['passivo_circulante', 'exigivel_lp', 'patrimonio_liquido', 'emprestimos'].some(id => idxTemDados(INDICES.find(d => d.id === id) || {}));
+  if (temCredores) {
+    notas.push('Passivo circulante, exigível a longo prazo, patrimônio líquido e empréstimos vêm com sinal negativo no arquivo (natureza credora); os índices usam o valor absoluto da média.');
+  }
+  const temEvaOuNopat = ['eva', 'capital_investido', 'nopat'].some(id => idxTemDados(INDICES.find(d => d.id === id) || {}));
+  if (temEvaOuNopat) {
+    notas.push(`NOPAT = Resultado operacional × (1 − alíquota). Alíquota: ${resultado.indices.origem_aliquota}. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido. MVA aproximado = EVA ÷ WACC (perpetuidade).`);
+  }
+  if (idxTemDados(INDICES.find(d => d.id === 'ls') || {})) {
+    notas.push('Liquidez seca: estoques ausentes em um ano são tratados como zero.');
+  }
+  if (resultado.resumo.anos.includes(ANO_ENCERRAMENTO) && INDICES.some(d => d.balanco && idxTemDados(d))) {
+    notas.push(`Ano ${ANO_ENCERRAMENTO} (encerramento da concessão): contas patrimoniais deixam de existir ou ficam próximas de zero; índices patrimoniais desse ano não são comparáveis aos anos anteriores.`);
   }
   return notas;
 }
@@ -3327,47 +3327,88 @@ function cartoesIndices() {
   const pri = reg[0], ult = reg[reg.length - 1];
   const serie = id => reg.map(l => ({ ano: l.ano, v: l[id] })).filter(x => tem(x.v));
   const extremo = (id, max) => { const s = serie(id); return s.length ? s.reduce((m, x) => (max ? x.v > m.v : x.v < m.v) ? x : m, s[0]) : null; };
-  const ate = `Ano ${pri.ano} ao Ano ${ult.ano}`;
   const out = [];
 
-  let t = 'O que é: EBITDA = Resultado operacional + Depreciação e amortização. É uma aproximação do que a operação gera antes de juros, impostos e desgaste do ativo. A margem EBITDA mostra quanto de cada R$ 1,00 de receita sobra da operação.';
-  if (tem(pri.margem_ebitda) && tem(ult.margem_ebitda)) {
-    t += `\nNos dados: a margem EBITDA vai de ${fmtPct(pri.margem_ebitda)} (Ano ${pri.ano}) para ${fmtPct(ult.margem_ebitda)} (Ano ${ult.ano}) e o EBITDA médio de R$ ${fmt(pri.ebitda, 0)} mi para R$ ${fmt(ult.ebitda, 0)} mi.`;
-  }
-  const div = resultado.por_ano.map(x => x.divergencia_ebitda).filter(tem);
-  if (div.length) t += ` O EBITDA que vem pronto no arquivo difere do recalculado em ${fmt(Math.min(...div) * 100, 1)}% a ${fmt(Math.max(...div) * 100, 1)}% conforme o ano; usamos sempre o recalculado, que pode ser conferido com a DRE.`;
-  out.push({ tipo: tem(ult.margem_ebitda) && ult.margem_ebitda >= pri.margem_ebitda ? 'bom' : 'atencao', titulo: 'EBITDA e Margem EBITDA', texto: t });
-
-  if (serie('lc').length) {
-    const piorLc = extremo('lc', false);
-    t = 'O que é: LC = Ativo circulante ÷ Passivo circulante. LS tira os estoques do ativo. LI usa só o disponível. LG inclui também o longo prazo: (Ativo circulante + Realizável a LP) ÷ (Passivo circulante + Exigível a LP). Acima de 1,0 a empresa cobre o que vence com o que tem; abaixo, depende de novas entradas de caixa ou de refinanciamento (1,0 é uma referência usual, não uma regra absoluta).';
-    t += `\nNos dados: a LC vai de ${fmt(pri.lc, 2)} (Ano ${pri.ano}) para ${fmt(ult.lc, 2)} (Ano ${ult.ano}), com o ponto mais baixo de ${fmt(piorLc.v, 2)} no Ano ${piorLc.ano}.`;
-    if (tem(ult.lg)) t += ` A LG fica em ${fmt(ult.lg, 2)} no Ano ${ult.ano}${ult.lg < 1 ? ': os ativos totais a receber não cobririam todas as obrigações de uma vez' : ''}.`;
-    out.push({ tipo: ult.lc >= 1 ? 'bom' : (ult.lc >= 0.5 ? 'atencao' : 'ruim'), titulo: 'Liquidez (LC, LS, LI, LG)', texto: t });
+  if (serie('ebitda').length) {
+    let t = 'O que é: EBITDA = Resultado operacional + Depreciação e amortização. É uma aproximação do que a operação gera antes de juros, impostos e desgaste do ativo. A margem EBITDA mostra quanto de cada R$ 1,00 de receita sobra da operação.';
+    if (tem(pri.margem_ebitda) && tem(ult.margem_ebitda)) {
+      t += `\nNos dados: a margem EBITDA vai de ${fmtPct(pri.margem_ebitda)} (Ano ${pri.ano}) para ${fmtPct(ult.margem_ebitda)} (Ano ${ult.ano}) e o EBITDA médio de R$ ${fmt(pri.ebitda, 0)} mi para R$ ${fmt(ult.ebitda, 0)} mi.`;
+    }
+    const div = resultado.por_ano.map(x => x.divergencia_ebitda).filter(tem);
+    if (div.length) t += ` O EBITDA que vem pronto no arquivo difere do recalculado em ${fmt(Math.min(...div) * 100, 1)}% a ${fmt(Math.max(...div) * 100, 1)}% conforme o ano; usamos sempre o recalculado, que pode ser conferido com a DRE.`;
+    out.push({ tipo: tem(ult.margem_ebitda) && ult.margem_ebitda >= pri.margem_ebitda ? 'bom' : 'atencao', titulo: 'EBITDA e Margem EBITDA', texto: t });
   }
 
-  if (serie('pct').length) {
-    const pico = extremo('pct', true);
-    t = 'O que é: PCT = (Passivo circulante + Exigível a LP) ÷ Patrimônio líquido, ou seja, quantos reais de obrigações existem para cada R$ 1,00 de capital próprio. CE = Passivo circulante ÷ (Passivo circulante + Exigível a LP): a fatia da dívida que vence no curto prazo. IPL = Ativo permanente ÷ Patrimônio líquido: quanto do capital próprio está preso em ativo fixo.';
-    t += `\nNos dados: o PCT chega ao pico de ${fmt(pico.v, 2)}x no Ano ${pico.ano} e termina em ${fmt(ult.pct, 2)}x no Ano ${ult.ano}.`;
-    if (tem(pri.ce) && tem(ult.ce)) t += ` A composição do endividamento vai de ${fmtPct(pri.ce)} para ${fmtPct(ult.ce)}: ${ult.ce > pri.ce ? 'a dívida está ficando mais concentrada no curto prazo' : 'a dívida está ficando menos concentrada no curto prazo'}.`;
-    out.push({ tipo: tem(pri.ce) && ult.ce > pri.ce ? 'atencao' : 'info', titulo: 'Endividamento (PCT, CE, IPL)', texto: t });
+  const sLc = serie('lc');
+  if (sLc.length || serie('ls').length || serie('li').length || serie('lg').length) {
+    let t = 'O que é: LC = Ativo circulante ÷ Passivo circulante. LS tira os estoques do ativo. LI usa só o disponível. LG inclui também o longo prazo: (Ativo circulante + Realizável a LP) ÷ (Passivo circulante + Exigível a LP). Acima de 1,0 a empresa cobre o que vence com o que tem; abaixo, depende de novas entradas de caixa ou de refinanciamento.';
+    if (sLc.length) {
+      const piorLc = extremo('lc', false);
+      const priLc = sLc[0], ultLc = sLc[sLc.length - 1];
+      t += `\nNos dados: a LC vai de ${fmt(priLc.v, 2)} (Ano ${priLc.ano}) para ${fmt(ultLc.v, 2)} (Ano ${ultLc.ano})${piorLc ? `, com o ponto mais baixo de ${fmt(piorLc.v, 2)} no Ano ${piorLc.ano}` : ''}.`;
+    }
+    const sLg = serie('lg');
+    if (sLg.length) {
+      const ultLg = sLg[sLg.length - 1];
+      t += ` A LG fica em ${fmt(ultLg.v, 2)} no Ano ${ultLg.ano}${ultLg.v < 1 ? ': os ativos totais a receber não cobririam todas as obrigações de uma vez' : ''}.`;
+    }
+    const tipo = sLc.length ? (sLc[sLc.length - 1].v >= 1 ? 'bom' : (sLc[sLc.length - 1].v >= 0.5 ? 'atencao' : 'ruim')) : 'info';
+    out.push({ tipo, titulo: 'Liquidez (LC, LS, LI, LG)', texto: t });
   }
 
-  if (serie('roe').length || serie('roa').length) {
-    const pico = extremo('roe', true);
-    t = 'O que é: ROA = Resultado líquido ÷ Total do ativo (retorno de tudo que a empresa tem). ROE = Resultado líquido ÷ Patrimônio líquido (retorno do capital próprio, inflado por dívida). Margem líquida = Resultado líquido ÷ Receita. Margem operacional = Resultado operacional ÷ Receita.';
-    t += `\nNos dados: ${tem(pri.roa) && tem(ult.roa) ? `o ROA vai de ${fmtPct(pri.roa)} para ${fmtPct(ult.roa)}. ` : ''}${pico ? `O ROE tem pico de ${fmtPct(pico.v)} no Ano ${pico.ano} e termina em ${fmtPct(ult.roe)}. ` : ''}${tem(pri.margem_liquida) ? `A margem líquida vai de ${fmtPct(pri.margem_liquida)} para ${fmtPct(ult.margem_liquida)}.` : ''}`;
-    if (tem(pri.roa) && tem(ult.roa) && ult.roa > pri.roa) t += ' Atenção: parte da alta do ROA pode vir de um total do ativo que encolhe (número que sobe dividido por outro que cai), e não só de uma operação mais lucrativa.';
+  const sPct = serie('pct');
+  const sCe = serie('ce');
+  const sIpl = serie('ipl');
+  if (sPct.length || sCe.length || sIpl.length) {
+    let t = 'O que é: PCT = (Passivo circulante + Exigível a LP) ÷ Patrimônio líquido, ou seja, quantos reais de obrigações existem para cada R$ 1,00 de capital próprio. CE = Passivo circulante ÷ (Passivo circulante + Exigível a LP): a fatia da dívida que vence no curto prazo. IPL = Ativo permanente ÷ Patrimônio líquido: quanto do capital próprio está preso em ativo fixo.';
+    let detalhes = [];
+    if (sPct.length) {
+      const pico = extremo('pct', true);
+      const priPct = sPct[0], ultPct = sPct[sPct.length - 1];
+      detalhes.push(`o PCT chega ao pico de ${fmt(pico.v, 2)}x no Ano ${pico.ano} e termina em ${fmt(ultPct.v, 2)}x no Ano ${ultPct.ano}`);
+    }
+    if (sCe.length >= 2) {
+      const priCe = sCe[0], ultCe = sCe[sCe.length - 1];
+      detalhes.push(`a composição do endividamento vai de ${fmtPct(priCe.v)} para ${fmtPct(ultCe.v)}: ${ultCe.v > priCe.v ? 'a dívida está ficando mais concentrada no curto prazo' : 'a dívida está ficando menos concentrada no curto prazo'}`);
+    }
+    if (detalhes.length) t += '\nNos dados: ' + detalhes.join('; ') + '.';
+    const tipo = (sCe.length >= 2 && sCe[sCe.length - 1].v > sCe[0].v) ? 'atencao' : 'info';
+    out.push({ tipo, titulo: 'Endividamento (PCT, CE, IPL)', texto: t });
+  }
+
+  const sRoa = serie('roa');
+  const sRoe = serie('roe');
+  if (sRoa.length || sRoe.length) {
+    let t = 'O que é: ROA = Resultado líquido ÷ Total do ativo (retorno de tudo que a empresa tem). ROE = Resultado líquido ÷ Patrimônio líquido (retorno do capital próprio, inflado por dívida). Margem líquida = Resultado líquido ÷ Receita. Margem operacional = Resultado operacional ÷ Receita.';
+    let detalhes = [];
+    if (sRoa.length >= 2) {
+      detalhes.push(`o ROA vai de ${fmtPct(sRoa[0].v)} para ${fmtPct(sRoa[sRoa.length - 1].v)}`);
+    }
+    if (sRoe.length) {
+      const picoRoe = extremo('roe', true);
+      const ultRoe = sRoe[sRoe.length - 1];
+      detalhes.push(`o ROE tem pico de ${fmtPct(picoRoe.v)} no Ano ${picoRoe.ano} e termina em ${fmtPct(ultRoe.v)}`);
+    }
+    if (tem(pri.margem_liquida) && tem(ult.margem_liquida)) {
+      detalhes.push(`a margem líquida vai de ${fmtPct(pri.margem_liquida)} para ${fmtPct(ult.margem_liquida)}`);
+    }
+    if (detalhes.length) t += '\nNos dados: ' + detalhes.join('; ') + '.';
+    if (sRoa.length >= 2 && sRoa[sRoa.length - 1].v > sRoa[0].v) {
+      t += ' Atenção: parte da alta do ROA pode vir de um total do ativo que encolhe, e não só de uma operação mais lucrativa.';
+    }
     out.push({ tipo: 'info', titulo: 'Rentabilidade (ROA, ROE, margens)', texto: t.trim() });
   }
 
   const evas = serie('eva');
   if (evas.length) {
     const positivos = evas.filter(x => x.v > 0).length;
-    t = `O que é: NOPAT é o resultado operacional depois do imposto. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido: o que sobra depois de remunerar o capital pelo custo mínimo exigido (WACC, hoje ${fmt(wacc * 100, 1)}% ao ano). EVA positivo significa que a empresa cria valor econômico, e não só lucro contábil. O MVA aproximado é o EVA ÷ WACC (valor presente do EVA como perpetuidade).`;
+    let t = `O que é: NOPAT é o resultado operacional depois do imposto. Capital investido = Patrimônio líquido + Empréstimos. EVA = NOPAT − WACC × Capital investido: o que sobra depois de remunerar o capital pelo custo mínimo exigido (WACC, hoje ${fmt(wacc * 100, 1)}% ao ano). EVA positivo significa que a empresa cria valor econômico, e não só lucro contábil. O MVA aproximado é o EVA ÷ WACC (valor presente do EVA como perpetuidade).`;
     t += `\nNos dados: o EVA é positivo em ${positivos} de ${evas.length} anos comparáveis.`;
-    if (tem(pri.eva_ci) && tem(ult.eva_ci)) t += ` A relação EVA ÷ Capital investido vai de ${fmtPct(pri.eva_ci)} para ${fmtPct(ult.eva_ci)}${ult.eva_ci < pri.eva_ci ? ': a empresa continua criando valor, mas cada real novo de capital rende proporcionalmente menos' : ''}.`;
+    const sEvaCi = serie('eva_ci');
+    if (sEvaCi.length >= 2) {
+      const priCi = sEvaCi[0], ultCi = sEvaCi[sEvaCi.length - 1];
+      t += ` A relação EVA ÷ Capital investido vai de ${fmtPct(priCi.v)} para ${fmtPct(ultCi.v)}${ultCi.v < priCi.v ? ': a empresa continua criando valor, mas cada real novo de capital rende proporcionalmente menos' : ''}.`;
+    }
     out.push({ tipo: positivos === evas.length ? 'bom' : (positivos === 0 ? 'ruim' : 'atencao'), titulo: 'Valor econômico (NOPAT, EVA, MVA)', texto: t });
   }
   return out;
@@ -3412,9 +3453,15 @@ function figIdxEbitda() {
 function figIdxLiquidez() {
   const cores = obterCoresTema();
   const s = seriesReg();
-  const defs = [['lc', 'LC', cores.azul], ['ls', 'LS', cores.verde], ['li', 'LI', cores.laranja], ['lg', 'LG', cores.roxo]];
+  const defs = [
+    ['lc', 'LC', cores.azul],
+    ['ls', 'LS', cores.verde],
+    ['li', 'LI', cores.laranja],
+    ['lg', 'LG', cores.roxo]
+  ].filter(([id]) => idxTemDados(INDICES.find(x => x.id === id)));
+  if (!defs.length) return null;
   const data = defs.map(([id, nome, cor]) => traceLinhaIdx(s.anos, s.vals(id), nome, cor));
-  const todos = defs.flatMap(([id]) => s.vals(id));
+  const todos = defs.flatMap(([id]) => s.vals(id)).filter(v => v !== null && isFinite(v));
   const [mn, mx] = faixa(todos.concat([0, 1]), 0.1);
   const layout = obterLayoutBase('Liquidez (Anos 1 a 11)', {
     legend: legendaTopo(cores),
@@ -3429,29 +3476,56 @@ function figIdxLiquidez() {
 function figIdxEndiv() {
   const cores = obterCoresTema();
   const s = seriesReg();
-  const data = [
-    traceLinhaIdx(s.anos, s.vals('pct'), 'PCT (x)', cores.azul),
-    traceLinhaIdx(s.anos, s.vals('ipl'), 'IPL (x)', cores.laranja),
-    traceLinhaIdx(s.anos, s.vals('ce'), 'CE (%, eixo direito)', cores.vermelho, { yaxis: 'y2', line: { color: cores.vermelho, width: 2.5, dash: 'dot' } })
-  ];
-  const layout = obterLayoutBase('Endividamento (Anos 1 a 11)', {
+  const defs = [
+    ['pct', 'PCT (x)', cores.azul, {}],
+    ['ipl', 'IPL (x)', cores.laranja, {}],
+    ['ce', 'CE (%, eixo direito)', cores.vermelho, { yaxis: 'y2', line: { color: cores.vermelho, width: 2.5, dash: 'dot' } }]
+  ].filter(([id]) => idxTemDados(INDICES.find(x => x.id === id)));
+  if (!defs.length) return null;
+  const data = defs.map(([id, nome, cor, extra]) => traceLinhaIdx(s.anos, s.vals(id), nome, cor, extra));
+  const temPct = idxTemDados(INDICES.find(x => x.id === 'pct'));
+  const temIpl = idxTemDados(INDICES.find(x => x.id === 'ipl'));
+  const temCe = idxTemDados(INDICES.find(x => x.id === 'ce'));
+  const valsEixo1 = [
+    ...(temPct ? s.vals('pct') : []),
+    ...(temIpl ? s.vals('ipl') : [])
+  ].filter(v => v !== null && isFinite(v));
+  const valsEixo2 = temCe ? s.vals('ce').filter(v => v !== null && isFinite(v)) : [];
+
+  const extrasLayout = {
     legend: legendaTopo(cores), margin: { r: 50 },
-    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
-    yaxis: { range: faixa(s.vals('pct').concat(s.vals('ipl')), 0.12, true), title: 'vezes', gridcolor: cores.grade },
-    yaxis2: { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(s.vals('ce'), 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } }
-  });
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade }
+  };
+  if (valsEixo1.length) {
+    extrasLayout.yaxis = { range: faixa(valsEixo1, 0.12, true), title: 'vezes', gridcolor: cores.grade };
+  }
+  if (valsEixo2.length) {
+    extrasLayout.yaxis2 = { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(valsEixo2, 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } };
+  }
+  const layout = obterLayoutBase('Endividamento (Anos 1 a 11)', extrasLayout);
   return { data, layout, tipo: 'linhas' };
 }
 
 function figIdxRent() {
   const cores = obterCoresTema();
   const s = seriesReg();
-  const defs = [['roa', 'ROA', cores.azul], ['roe', 'ROE', cores.rosa], ['margem_liquida', 'Margem líquida', cores.verde], ['margem_operacional', 'Margem operacional', cores.laranja]];
+  const temRoa = idxTemDados(INDICES.find(x => x.id === 'roa'));
+  const temRoe = idxTemDados(INDICES.find(x => x.id === 'roe'));
+  if (!temRoa && !temRoe) return null;
+
+  const defs = [
+    ['roa', 'ROA', cores.azul],
+    ['roe', 'ROE', cores.rosa],
+    ['margem_liquida', 'Margem líquida', cores.verde],
+    ['margem_operacional', 'Margem operacional', cores.laranja]
+  ].filter(([id]) => idxTemDados(INDICES.find(x => x.id === id)));
+
   const data = defs.map(([id, nome, cor]) => traceLinhaIdx(s.anos, s.vals(id), nome, cor));
+  const todos = defs.flatMap(([id]) => s.vals(id)).filter(v => v !== null && isFinite(v));
   const layout = obterLayoutBase('Rentabilidade (Anos 1 a 11)', {
     legend: legendaTopo(cores),
     xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
-    yaxis: { range: faixa(defs.flatMap(([id]) => s.vals(id)), 0.1, true), tickformat: '.0%', gridcolor: cores.grade }
+    yaxis: { range: faixa(todos, 0.1, true), tickformat: '.0%', gridcolor: cores.grade }
   });
   return { data, layout, tipo: 'linhas' };
 }
@@ -3459,69 +3533,132 @@ function figIdxRent() {
 function figIdxEva() {
   const cores = obterCoresTema();
   const s = seriesReg();
-  const eva = s.vals('eva');
-  const data = [
-    { x: s.anos, y: eva, name: 'EVA (R$ mi)', type: 'bar', marker: { color: eva.map(v => v !== null && v < 0 ? cores.vermelho : cores.teal) } },
-    traceLinhaIdx(s.anos, s.vals('eva_ci'), 'EVA / Capital investido (eixo direito)', cores.laranja, { yaxis: 'y2' })
-  ];
-  const layout = obterLayoutBase(`EVA e EVA / Capital Investido (WACC ${fmt(wacc * 100, 1)}%)`, {
+  const temEva = idxTemDados(INDICES.find(x => x.id === 'eva'));
+  const temEvaCi = idxTemDados(INDICES.find(x => x.id === 'eva_ci'));
+  if (!temEva && !temEvaCi) return null;
+
+  const data = [];
+  const extrasLayout = {
     legend: legendaTopo(cores), margin: { r: 50 },
-    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
-    yaxis: { range: faixa(eva, 0.12, true), title: 'R$ milhões', gridcolor: cores.grade },
-    yaxis2: { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(s.vals('eva_ci'), 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } }
-  });
+    xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade }
+  };
+  if (temEva) {
+    const eva = s.vals('eva');
+    data.push({ x: s.anos, y: eva, name: 'EVA (R$ mi)', type: 'bar', marker: { color: eva.map(v => v !== null && v < 0 ? cores.vermelho : cores.teal) } });
+    extrasLayout.yaxis = { range: faixa(eva.filter(v => v !== null && isFinite(v)), 0.12, true), title: 'R$ milhões', gridcolor: cores.grade };
+  }
+  if (temEvaCi) {
+    const valsCi = s.vals('eva_ci');
+    data.push(traceLinhaIdx(s.anos, valsCi, 'EVA / Capital investido (eixo direito)', cores.laranja, { yaxis: 'y2' }));
+    extrasLayout.yaxis2 = { overlaying: 'y', side: 'right', tickformat: '.0%', range: faixa(valsCi.filter(v => v !== null && isFinite(v)), 0.15, true), showgrid: false, tickfont: { color: cores.texto, size: 11 } };
+  }
+  const layout = obterLayoutBase(`EVA e EVA / Capital Investido (WACC ${fmt(wacc * 100, 1)}%)`, extrasLayout);
   return { data, layout, tipo: 'estatico' };
 }
 
 function figIdxCapital() {
   const cores = obterCoresTema();
   const s = seriesReg();
-  const data = [
-    traceLinhaIdx(s.anos, s.vals('nopat'), 'NOPAT', cores.azul),
-    traceLinhaIdx(s.anos, s.vals('capital_investido'), 'Capital investido', cores.laranja)
-  ];
+  const temNopat = idxTemDados(INDICES.find(x => x.id === 'nopat'));
+  const temCi = idxTemDados(INDICES.find(x => x.id === 'capital_investido'));
+  if (!temCi) return null;
+
+  const data = [];
+  if (temNopat) data.push(traceLinhaIdx(s.anos, s.vals('nopat'), 'NOPAT', cores.azul));
+  data.push(traceLinhaIdx(s.anos, s.vals('capital_investido'), 'Capital investido', cores.laranja));
+  const todos = (temNopat ? s.vals('nopat') : []).concat(s.vals('capital_investido')).filter(v => v !== null && isFinite(v));
   const layout = obterLayoutBase('NOPAT e Capital Investido (R$ milhões)', {
     legend: legendaTopo(cores),
     xaxis: { categoryorder: 'array', categoryarray: s.anos, gridcolor: cores.grade },
-    yaxis: { range: faixa(s.vals('nopat').concat(s.vals('capital_investido')), 0.12, true), gridcolor: cores.grade }
+    yaxis: { range: faixa(todos, 0.12, true), gridcolor: cores.grade }
   });
   return { data, layout, tipo: 'linhas' };
 }
 
 const FIGURAS_INDICES = [
-  ['g-idx-ebitda', figIdxEbitda, ['ebitda']], ['g-idx-liquidez', figIdxLiquidez, ['lc']],
-  ['g-idx-endiv', figIdxEndiv, ['pct']], ['g-idx-rent', figIdxRent, ['roa', 'roe', 'margem_liquida']],
-  ['g-idx-eva', figIdxEva, ['eva']], ['g-idx-capital', figIdxCapital, ['capital_investido']]
+  ['g-idx-ebitda', figIdxEbitda, ['ebitda']],
+  ['g-idx-liquidez', figIdxLiquidez, ['lc', 'ls', 'li', 'lg']],
+  ['g-idx-endiv', figIdxEndiv, ['pct', 'ipl', 'ce']],
+  ['g-idx-rent', figIdxRent, ['roa', 'roe']],
+  ['g-idx-eva', figIdxEva, ['eva', 'eva_ci', 'mva']],
+  ['g-idx-capital', figIdxCapital, ['capital_investido']]
 ];
 const figuraIndiceDisponivel = ids => ids.some(id => idxTemDados(INDICES.find(d => d.id === id)));
 
 function desenharIndices(animar = true) {
   const secao = $('s-indices');
   if (!secao) return;
-  if (!indicesDisponiveis()) { secao.classList.add('oculto'); return; }
+  if (!indicesDisponiveis()) {
+    secao.classList.add('oculto');
+    FIGURAS_INDICES.forEach(([id]) => {
+      const el = $(id);
+      if (el) { el.classList.add('oculto'); Plotly.purge(id); }
+    });
+    return;
+  }
   secao.classList.remove('oculto');
 
-  const aus = resultado.indices.campos_ausentes || [];
-  $('aviso-indices').innerHTML = aus.length
-    ? htmlCartoes([{ tipo: 'atencao', titulo: 'Alguns campos de balanço não foram mapeados',
-        texto: 'Sem estes campos, os índices que dependem deles ficam indisponíveis: ' + aus.map(a => ROTULOS[a] || a).join(', ') + '. Recarregue o arquivo e associe as contas na etapa de mapeamento.' }])
-    : '';
+  // WACC filter: apenas exibir se EVA, EVA/CI ou MVA estiverem ativos
+  const temWaccIndices = ['eva', 'eva_ci', 'mva'].some(id => idxTemDados(INDICES.find(d => d.id === id)));
+  const divFiltrosWacc = $('filtros-wacc');
+  if (divFiltrosWacc) divFiltrosWacc.classList.toggle('oculto', !temWaccIndices);
 
+  // Nunca exibir aviso de campos ausentes que crie sensação de erro ou deixe espaço em branco
+  const aviso = $('aviso-indices');
+  if (aviso) { aviso.innerHTML = ''; aviso.classList.add('oculto'); }
+
+  // Tabela de índices
   const t = tabelaIndices();
-  $('t-indices').innerHTML = '<tr>' + t.cab.map((c, i) => `<th>${esc(c)}</th>`).join('') + '</tr>' +
-    t.corpo.map(l => l.grupo
-      ? `<tr class="grupo"><td colspan="${t.cab.length}">${esc(l.grupo)}</td></tr>`
-      : `<tr><td>${esc(l.nome)}</td>${l.celulas.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('');
-  $('nota-indices').innerHTML = notasIndices().map(n => `<p>${esc(n)}</p>`).join('');
+  const wrapTIndices = $('wrap-t-indices');
+  if (wrapTIndices) wrapTIndices.classList.toggle('oculto', t.corpo.length === 0);
+  if (t.corpo.length > 0) {
+    $('t-indices').innerHTML = '<tr>' + t.cab.map((c, i) => `<th>${esc(c)}</th>`).join('') + '</tr>' +
+      t.corpo.map(l => l.grupo
+        ? `<tr class="grupo"><td colspan="${t.cab.length}">${esc(l.grupo)}</td></tr>`
+        : `<tr><td>${esc(l.nome)}</td>${l.celulas.map(c => `<td>${esc(c)}</td>`).join('')}</tr>`).join('');
+  }
 
+  // Notas
+  const notas = notasIndices();
+  const notaEl = $('nota-indices');
+  if (notaEl) {
+    notaEl.classList.toggle('oculto', notas.length === 0);
+    notaEl.innerHTML = notas.map(n => `<p>${esc(n)}</p>`).join('');
+  }
+
+  // Figuras
+  let graficosVisiveis = 0;
   FIGURAS_INDICES.forEach(([id, fn, ids]) => {
     const el = $(id);
     if (!el) return;
     const ok = figuraIndiceDisponivel(ids);
-    el.classList.toggle('oculto', !ok);
-    if (ok) plotarFig(id, fn(), animar);
+    if (ok) {
+      const fig = fn();
+      if (fig && fig.data && fig.data.length > 0) {
+        el.classList.remove('oculto');
+        plotarFig(id, fig, animar);
+        graficosVisiveis++;
+        return;
+      }
+    }
+    el.classList.add('oculto');
+    Plotly.purge(id);
   });
-  $('leitura-indices').innerHTML = htmlCartoes(cartoesIndices());
+
+  const gradeIndices = $('grade-indices');
+  if (gradeIndices) {
+    gradeIndices.classList.toggle('oculto', graficosVisiveis === 0);
+  }
+
+  // Cartões / diagnósticos
+  const cartoes = cartoesIndices();
+  const subLeitura = $('sub-leitura-indices');
+  const divLeitura = $('leitura-indices');
+  if (subLeitura) subLeitura.classList.toggle('oculto', cartoes.length === 0);
+  if (divLeitura) {
+    divLeitura.classList.toggle('oculto', cartoes.length === 0);
+    divLeitura.innerHTML = cartoes.length ? htmlCartoes(cartoes) : '';
+  }
 }
 
 function configurarWacc() {
@@ -3767,7 +3904,7 @@ function cartoesLimitacoes() {
   const v = REG().variacao_por_ano;
   const fixos = v.filter(x => x.cv_dist === 0).map(x => x.ano);
   const lista = [
-    'Os dados são simulados (Monte Carlo): os resultados valem para o modelo da CTI, não para dados reais observados.',
+    'Os dados são simulados estatisticamente: os resultados valem para o modelo da CTI, não para dados reais observados.',
     'Associação não é causalidade: CAPEX e despesas financeiras carregam efeitos de outros fatores do cenário (por exemplo, o calendário da dívida).',
     'A Geração de Caixa costuma ser composta pelos próprios itens do fluxo (como CAPEX e despesas financeiras), então parte do R² dos modelos que incluem esses itens é mecânica.'
   ];

@@ -19,6 +19,18 @@ VARIACOES = {
     'FLU - Despesas Financeiras': ['Juros', 'Interest', 'Finance Cost', 'Despesa Financeira'],
     'FLU - Distribuição para Acionista': ['Dividendos', 'Dividends', 'Payout', 'Distribuicao'],
     'FLU - Saldo Final': ['Saldo de Caixa', 'Ending Cash', 'Caixa Final', 'Saldo Final'],
+    'BAL - Ativo Circulante': ['Ativo Circulante', 'Total do Ativo Circulante', 'Current Assets', 'Ativo Corrente'],
+    'BAL - Passivo Circulante': ['Passivo Circulante', 'Total do Passivo Circulante', 'Current Liabilities', 'Passivo Corrente'],
+    'BAL - Disponível': ['Disponível', 'Disponibilidades', 'Caixa e Bancos', 'Cash and Cash Equivalents'],
+    'BAL - Estoques Diversos': ['Estoques', 'Estoque', 'Inventories', 'Almoxarifado'],
+    'BAL - Realizável a Longo Prazo': ['Realizável a Longo Prazo', 'Long Term Receivables', 'Ativo Realizável a Longo Prazo'],
+    'BAL - Exigível a Longo Prazo': ['Exigível a Longo Prazo', 'Passivo Não Circulante', 'Long Term Liabilities'],
+    'BAL - Patrimônio Líquido': ['Patrimônio Líquido', 'Shareholders Equity', 'Total Equity', 'PL'],
+    'BAL - Permanente': ['Ativo Permanente', 'Permanente', 'Fixed Assets', 'Imobilizado'],
+    'BAL - Total do Ativo': ['Total do Ativo', 'Ativo Total', 'Total Assets'],
+    'BAL - Empréstimos': ['Empréstimos', 'Empréstimos e Financiamentos', 'Financiamentos', 'Dívida Bruta'],
+    'DRE - Imposto de Renda e Contribuição Social': ['Imposto de Renda e Contribuição Social', 'IRPJ e CSLL', 'Imposto de Renda', 'Income Tax'],
+    'DRE - Resultado Antes do Imposto de Renda': ['Resultado Antes do Imposto de Renda', 'Resultado Antes dos Impostos', 'LAIR', 'Earnings Before Tax'],
 }
 
 # Sorteia um nome aleatório para cada campo neste arquivo específico
@@ -62,6 +74,18 @@ for ano in range(1, 13):
             'FLU - Despesas Financeiras': despfin,
             'FLU - Distribuição para Acionista': dist,
             'FLU - Saldo Final': 1e9 + caixa,
+            'BAL - Ativo Circulante': 1.5e9 + rng.normal(0, 1e7),
+            'BAL - Passivo Circulante': -1.1e9,
+            'BAL - Disponível': 6e8,
+            'BAL - Estoques Diversos': 1.2e8,
+            'BAL - Realizável a Longo Prazo': 8e8,
+            'BAL - Exigível a Longo Prazo': -3.2e9,
+            'BAL - Patrimônio Líquido': -4.5e9,
+            'BAL - Permanente': 6.5e9,
+            'BAL - Total do Ativo': 8.8e9,
+            'BAL - Empréstimos': -2.5e9,
+            'DRE - Imposto de Renda e Contribuição Social': -0.12 * receita,
+            'DRE - Resultado Antes do Imposto de Renda': 0.48 * receita,
         }
         
         # Linha de cabeçalho do cenário

@@ -120,48 +120,62 @@ SINONIMOS_CONTAS = {
     ],
     'ativo_circulante': [
         'BAL - Ativo Circulante', 'Ativo Circulante', 'Total do Ativo Circulante',
-        'Current Assets', 'Total Current Assets',
+        'Ativo Circulante Total', 'Ativo Corrente', 'Current Assets', 'Total Current Assets',
     ],
     'passivo_circulante': [
         'BAL - Passivo Circulante', 'Passivo Circulante', 'Total do Passivo Circulante',
+        'Passivo Circulante Total', 'Passivo Corrente', 'Passivo de Curto Prazo',
         'Current Liabilities', 'Total Current Liabilities',
     ],
     'disponivel': [
         'BAL - Disponível', 'Disponível', 'Disponibilidades', 'Caixa e Equivalentes de Caixa',
-        'Caixa e Bancos', 'Cash and Cash Equivalents', 'Cash',
+        'Caixa e Equivalentes', 'Caixa e Bancos', 'Cash and Cash Equivalents', 'Cash',
+        'Disponibilidades Financeiras', 'Recursos Disponíveis', 'Aplicações Financeiras',
+        'Disponibilidades e Aplicações',
     ],
     'estoques': [
         'BAL - Estoques Diversos', 'Estoques', 'Estoque', 'Inventories', 'Inventory',
+        'Almoxarifado', 'Mercadorias', 'Produtos Acabados', 'Materiais e Suprimentos',
     ],
     'realizavel_lp': [
-        'BAL - Realizável a Longo Prazo', 'Realizável a Longo Prazo',
-        'Ativo Realizável a Longo Prazo', 'Long Term Receivables',
+        'BAL - Realizável a Longo Prazo', 'Realizável a Longo Prazo', 'Realizavel a Longo Prazo',
+        'Realizável a LP', 'Realizavel LP', 'Ativo Realizável a Longo Prazo', 'Ativo Realizável a LP',
+        'Ativo Não Circulante Realizável', 'Long Term Receivables', 'BAL - Outros Créditos LP',
+        'Outros Créditos LP', 'Créditos de Longo Prazo',
     ],
     'exigivel_lp': [
-        'BAL - Exigível a Longo Prazo', 'Exigível a Longo Prazo', 'Passivo Não Circulante',
-        'Long Term Liabilities', 'Non-Current Liabilities',
+        'BAL - Exigível a Longo Prazo', 'Exigível a Longo Prazo', 'Exigivel a Longo Prazo',
+        'Exigível a LP', 'Exigivel LP', 'Passivo Não Circulante', 'Passivo Nao Circulante',
+        'Passivo de Longo Prazo', 'Long Term Liabilities', 'Non-Current Liabilities',
     ],
     'patrimonio_liquido': [
-        'BAL - Patrimônio Líquido', 'Patrimônio Líquido', 'Total do Patrimônio Líquido',
-        'Shareholders Equity', 'Total Equity', 'Equity', 'PL',
+        'BAL - Patrimônio Líquido', 'BAL  - Patrimônio Líquido', 'Patrimônio Líquido',
+        'Patrimonio Liquido', 'Total do Patrimônio Líquido', 'Total do Patrimonio Liquido',
+        'Shareholders Equity', 'Total Equity', 'Equity', 'PL', 'Capital Próprio',
     ],
     'ativo_permanente': [
         'BAL - Permanente', 'Ativo Permanente', 'Permanente', 'Fixed Assets',
+        'Imobilizado', 'Ativo Imobilizado', 'BAL - Investimentos - Imobilizado',
+        'BAL - Investimentos - Intangível', 'Investimentos - Imobilizado', 'Ativo Fixo',
     ],
     'total_ativo': [
-        'BAL - Total do Ativo', 'Total do Ativo', 'Ativo Total', 'Total Assets',
+        'BAL - Total do Ativo', 'Total do Ativo', 'Ativo Total', 'Total Ativo',
+        'Total Assets', 'Soma do Ativo',
     ],
     'emprestimos': [
-        'BAL - Empréstimos', 'Empréstimos', 'Empréstimos e Financiamentos', 'Financiamentos',
-        'Dívida Bruta', 'Loans', 'Borrowings',
+        'BAL - Empréstimos', 'BAL - Emprést', 'Empréstimos', 'Emprést', 'Emprestimos',
+        'Empréstimos e Financiamentos', 'Financiamentos', 'Financiamentos e Empréstimos',
+        'Dívida Bruta', 'Divida Bruta', 'Loans', 'Borrowings', 'Debêntures', 'Debentures',
     ],
     'imposto_renda': [
         'DRE - Imposto de Renda e Contribuição Social', 'Imposto de Renda e Contribuição Social',
-        'IRPJ e CSLL', 'Imposto de Renda', 'Provisão para IR e CSLL', 'Income Tax',
+        'IRPJ e CSLL', 'IR e CSLL', 'Imposto de Renda', 'Provisão para IR e CSLL',
+        'Impostos sobre o Lucro', 'Tributos sobre o Lucro', 'Income Tax',
     ],
     'resultado_antes_ir': [
         'DRE - Resultado Antes do Imposto de Renda', 'Resultado Antes do Imposto de Renda',
-        'Resultado Antes dos Impostos', 'Lucro Antes do Imposto de Renda', 'LAIR',
+        'Resultado Antes dos Impostos', 'Resultado Antes do IR', 'Lucro Antes do Imposto de Renda',
+        'Lucro Antes do IR', 'LAIR', 'Lucro Antes dos Tributos', 'Resultado Antes dos Tributos',
         'Earnings Before Tax', 'EBT',
     ],
 }
@@ -599,7 +613,7 @@ def indices_por_ano(base, wacc=WACC_PADRAO):
 
 
 # ---------------------------------------------------------------------------
-# Estatística da regressão (MQO com erros-padrão robustos, igual ao notebook da Entrega 2)
+# Estatística da regressão (MQO com erros-padrão robustos)
 # ---------------------------------------------------------------------------
 
 Z95 = 1.959963984540054
