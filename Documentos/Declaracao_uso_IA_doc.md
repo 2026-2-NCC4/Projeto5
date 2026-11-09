@@ -56,12 +56,12 @@
 
 | **Aluno(s) Responsável(veis)** | Bruno Rodrigues Da Costa, Guilherme Monteiro Da Silva, João Pedro Da Silva, Stefany Samira De Oliveira Cubertino |
 | :--- | :--- |
-| **Ferramenta utilizada** | Claude (Anthropic) |
-| **Versão/modelo** | Claude Sonnet 5.5 |
-| **Disciplina / Trabalho** | Projeto Interdisciplinar: Ciência de Dados – README.md do repositório e logo do projeto DataCore |
-| **Finalidade de uso** | Utilizamos a ferramenta como apoio (auxílio, não autoria integral): sugestão de redação e organização do conteúdo do README.md do repositório (descrição do projeto, metodologia, instruções de uso, tecnologias e referências), mantendo o layout padrão exigido, e geração de uma proposta de logo em PNG com fundo transparente. Definimos o conteúdo e decidimos quais elementos seriam mantidos na versão final. |
-| ***Prompts* principais utilizados** | 1) Pedido para melhorar o README do repositório sem alterar o layout, incluindo informações sobre o projeto, como foi feito, como usar e as tecnologias utilizadas, de forma profissional e detalhada. 2) Pedido para criar uma logo para o projeto em PNG com fundo transparente. |
-| **Trechos ou entregas afetadas** | README.md da raiz do repositório (conteúdo das seções Descrição, Estrutura de pastas, Instalação, Configuração para Desenvolvimento e Referências) e arquivo de imagem da logo em /Imagens. |
+| **Ferramenta utilizada** | Claude (Anthropic) / Antigravity |
+| **Versão/modelo** | Claude Sonnet 5.5 / Gemini 3.8 Flash |
+| **Disciplina / Trabalho** | Projeto Interdisciplinar: Ciência de Dados – README.md do repositório, logo do projeto DataCore e Scripts |
+| **Finalidade de uso** | Utilizamos a ferramenta como apoio (auxílio, não autoria integral): sugestão de redação e organização do conteúdo do README.md do repositório (descrição do projeto, metodologia, instruções de uso, tecnologias e referências), mantendo o layout padrão exigido, e geração de uma proposta de logo em PNG com fundo transparente. Definimos o conteúdo e decidimos quais elementos seriam mantidos na versão final. Pedimos sugestões de implementação dos requisitos e revisão de código, assim como a criação de código revisado e modificado por nós posteriormente. As decisões de arquitetura e o conteúdo final foram definidos por nós |
+| ***Prompts* principais utilizados** | 1) Pedido para melhorar o README do repositório sem alterar o layout, incluindo informações sobre o projeto, como foi feito, como usar e as tecnologias utilizadas, de forma profissional e detalhada. 2) Pedido para criar uma logo para o projeto em PNG com fundo transparente. / 1) “How would you go about implementing a mapping system for the field of the inserted files. Give me a step by step on how, with explanations and how complex each step would be. ” 2) “Can you create a dictionary of similar terms to be used in the auto mapping function? Make sure that they include both terms in English and Brazilian Portuguese.” 3) “How would you go about implementing animations to the cards and graphs? What tools are available from the imports we already have in the project?. ”|
+| **Trechos ou entregas afetadas** | README.md da raiz do repositório (conteúdo das seções Descrição, Estrutura de pastas, Instalação, Configuração para Desenvolvimento e Referências) e arquivo de imagem da logo em /Imagens. Scripts do Dashboard da Entrega 2 (entrega da disciplina: Projeto Interdisciplinar: Ciência de Dados) |
 
 
 ### Disciplina 2
@@ -73,7 +73,7 @@
 | **Disciplina / Trabalho** | Análise Inferencial de Dados – Entrega 2 (análise de regressão dos dados da CTI Global) |
 | **Finalidade de uso** | Utilizamos a ferramenta como apoio (auxílio, não autoria integral): sugestões de estrutura do notebook de regressão (modelos simples, múltiplo por ano, com efeito fixo de ano e específico do Ano 12), esclarecimento de conceitos (R², R² interno, erros-padrão robustos HC3 e agrupados, VIF, Breusch-Pagan, distância de Cook, validação treino/teste) e revisão da linguagem do relatório para torná-la acessível. Escolhemos as variáveis, executamos o código, conferimos os resultados e validamos as conclusões. |
 | ***Prompts* principais utilizados** | 1) Solicitamos ajuda para estruturar a regressão da Geração de Caixa em função do EBITDA, CAPEX e despesas financeiras. 2) Solicitamos explicação, em linguagem simples, das medidas de qualidade do ajuste e dos testes de diagnóstico dos resíduos. 3) Solicitamos revisão do texto do relatório, evitando afirmar causalidade. |
-| **Trechos ou entregas afetadas** | Notebook `Entrega02_Analise_Regressao_CTI.ipynb` (organização das células e comentários) e relatório da Entrega 2 de Análise Inferencial (seções 3, 5 a 9, revisão de redação e explicações introdutórias). |
+| **Trechos ou entregas afetadas** | Notebook `Entrega02_Analise_Regressao_CTI.ipynb` (organização das células e comentários) e relatório da Entrega 2 de Análise Inferencial (seções 3, 5 a 9, revisão de redação e explicações introdutórias).|
 
 ### Disciplina 3
 
