@@ -13,15 +13,21 @@
 ## Descrição
 
 <p align="center">
-  <img src="/Imagens/logo-datacore.png" 
-       alt="colocar logo depois" 
-       border="5" 
-       width="300">
+  <a href="https://debatingalpaca.github.io/Projeto-Interdisciplinar-4/">
+    <img src="/Imagens/logo-datacore.png" 
+         alt="Logo DataCore" 
+         border="5" 
+         width="300">
+  </a>
 </p>
 
 <p align="center">
   <a href="https://drive.google.com/file/d/14UuWQmCJLFeeGj-yEF9QwDimVzR_On6b/view?usp=sharing">Documento PI</a>
 </p>
+
+<h3 align="center">
+  <a href="https://debatingalpaca.github.io/Projeto-Interdisciplinar-4/">Acesso ao sistema DataCore</a>
+</h3>
 
 <p>
 <b>Visão Geral do Projeto</b><br>
